@@ -1,0 +1,126 @@
+{
+  "$id": "https://github.com/data-fair/catalog-udata/ods-dataset",
+  "x-exports": [
+    "types",
+    "validate",
+    "schema"
+  ],
+  "title": "ODSDataset",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_id"
+  ],
+  "properties": {
+    "_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "string",
+            "format": "uri"
+          },
+          "rel": {
+            "type": "string",
+            "enum": [
+              "self",
+              "first",
+              "last",
+              "next",
+              "dataset",
+              "catalog"
+            ]
+          }
+        }
+      }
+    },
+    "dataset_id": {
+      "type": "string"
+    },
+    "dataset_uid": {
+      "type": "string",
+      "readOnly": true
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "mimetype": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "has_records": {
+      "type": "boolean"
+    },
+    "data_visible": {
+      "type": "boolean"
+    },
+    "features": {
+      "type": "array",
+      "description": "A map of available features for a dataset, with the fields they apply to.\n",
+      "items": {
+        "type": "string"
+      }
+    },
+    "metas": {
+      "type": "object",
+      "properties": {
+        "default": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "keyword": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "annotations": {
+            "type": "object"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      }
+    },
+    "additionalProperties": {}
+  }
+}
