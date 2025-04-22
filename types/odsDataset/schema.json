@@ -1,5 +1,5 @@
 {
-  "$id": "https://github.com/data-fair/catalog-udata/ods-dataset",
+  "$id": "https://github.com/data-fair/catalog-ods/ods-dataset",
   "x-exports": [
     "types",
     "validate",
