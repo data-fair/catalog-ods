@@ -1,4 +1,4 @@
-import type { CatalogDataset } from '@data-fair/lib-common-types/catalog.js'
+import type { CatalogDataset } from '@data-fair/lib-common-types/catalog/index.js'
 import type { ODSConfig, ODSDataset } from '#types'
 
 export const prepareDataset = (catalogConfig: ODSConfig, odsDataset: ODSDataset): CatalogDataset => {
