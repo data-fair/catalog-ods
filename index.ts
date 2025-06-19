@@ -1,9 +1,11 @@
 import type { CatalogPlugin, CatalogMetadata, ListContext, DownloadResourceContext } from '@data-fair/lib-common-types/catalog/index.js'
+
 import { schema as configSchema, assertValid as assertConfigValid, type ODSConfig } from './types/config/index.ts'
 import capabilities from './lib/capabilities.ts'
 import { importConfigSchema } from './lib/importConfigSchema.ts'
 
 // API Doc: https://data.economie.gouv.fr/api/explore/v2.1/console
+
 
 const list = async (context: ListContext<ODSConfig, typeof capabilities>) => {
   const { list } = await import('./lib/imports.ts')
@@ -20,7 +22,7 @@ export const downloadResource = async ({ catalogConfig, resourceId, importConfig
   return downloadResource({ catalogConfig, resourceId, importConfig, tmpDir })
 }
 
-const filtersSchema: Record<string, any> = {
+const listFiltersSchema: Record<string, any> = {
   type: 'object',
   properties: {
     partName: {
@@ -33,18 +35,20 @@ const filtersSchema: Record<string, any> = {
   additionalProperties: false
 }
 
+
 const metadata: CatalogMetadata<typeof capabilities> = {
   title: 'Catalog ODS',
   description: 'Importez des jeux de données depuis une solution Opendatasoft.',
   capabilities
 }
 
+
 const plugin: CatalogPlugin<ODSConfig, typeof capabilities> = {
   list,
   getResource,
   downloadResource,
   configSchema,
-  filtersSchema,
+  listFiltersSchema,
   importConfigSchema,
   assertConfigValid,
   metadata

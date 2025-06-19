@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 export const importConfigSchema: Record<string, any> = {
   type: "object",
   properties: {
@@ -12,23 +10,32 @@ export const importConfigSchema: Record<string, any> = {
         title: "Filtre",
         properties: {
           field: {
-            type: "string",
+            type: "object",
             title: "Colonne de filtre",
+            properties: {
+              name: {
+                type: "string"
+              },
+              type: {
+                type: "string"
+              }
+            },
             layout: {
               getItems: {
-                url: "https://opendata.agenceore.fr/api/explore/v2.1/catalog/datasets/nombre-installation-production-stockage-electricite-31122019?select=fields",
+                url: "${context.catalogConfig.url}/catalog/datasets/${context.resourceId}?select=fields",
                 itemsResults: "data.fields",
                 itemTitle: "item.name",
-                itemKey: "item.name"
+                itemKey: "item.name",
               }
-            }
+            },
+            additionalProperties: true,
           },
           valeurs: {
             type: "array",
             title: "Valeurs",
             layout: {
               getItems: {
-                url: "https://opendata.agenceore.fr/api/explore/v2.1/catalog/datasets/nombre-installation-production-stockage-electricite-31122019/facets?facet=${parent.data?.field}",
+                url: "${context.catalogConfig.url}/catalog/datasets/${context.resourceId}/facets?facet=${parent.data?.field?.name}",
                 itemsResults: "data.facets[0].facets",
                 itemTitle: "item.name",
                 itemKey: "item.name"
