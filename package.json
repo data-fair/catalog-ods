@@ -9,7 +9,9 @@
     "check-types": "tsc",
     "lint": "eslint .",
     "prepare": "husky || true",
-    "test": "",
+    "test-base": "NODE_ENV=test EVENTS_LOG_LEVEL=alert node --test-force-exit --test-concurrency=1 --test --test-reporter=spec",
+    "test-only": "npm run test-base -- --test-only",
+    "test": "npm run test-base test/*.ts",
     "quality": "npm run lint && npm run build-types && npm run check-types && npm run test && npm audit --omit=dev --audit-level=critical",
     "prepublishOnly": "npm run build-types"
   },
