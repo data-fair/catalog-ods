@@ -37,6 +37,10 @@ export const importConfigSchema: Record<string, any> = {
             type: "array",
             title: "Valeurs",
             layout: {
+              if: {
+                expr: "parent.data?.field?.name?.length > 0",
+                pure: false
+              },
               getItems: {
                 url: "${context.catalogConfig.url}/api/explore/v2.1/catalog/datasets/${context.resourceId}/facets?facet=${parent.data?.field?.name}",
                 itemsResults: "data.facets[0].facets",

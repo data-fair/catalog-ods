@@ -85,18 +85,18 @@ const getRowsWithAValue = async (catalogConfig: ODSConfig, datasetId: string, co
       if (/^\d/.test(cons.field.name)) {
         throw new Error('Champ de filtrage invalide, il ne peut pas commencer par un chiffre')
       }
-      return cons.valeurs.map((valeur: { val: string }) => {
+      return cons.valeurs.map((valeur: { name: string }) => {
         switch (cons.field.type) {
           case 'text':
-            return `${cons.field.name} = "${valeur.val}"`
+            return `${cons.field.name} = "${valeur.name}"`
           case 'int':
           case 'double':
-            return `${cons.field.name} = ${valeur.val}`
+            return `${cons.field.name} = ${valeur.name}`
           case 'date':
           case 'datetime':
-            return `${cons.field.name} = date'${valeur.val}'`
+            return `${cons.field.name} = date'${valeur.name}'`
           default:
-            return `${cons.field.name} is ${valeur.val}`
+            return `${cons.field.name} is ${valeur.name}`
         }
       }).join(' or ')
     }).join(' and ')
