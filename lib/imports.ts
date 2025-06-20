@@ -68,7 +68,7 @@ const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDi
  *                    where the key is the field name and the value is the value to match
  * @returns an array of rows that match the given constraints
  */
-const getRowsWithAValue = async (catalogConfig: ODSConfig, datasetId: string, constraints: { field: { name: string; type: string }; valeurs: { val: string }[] }[]): Promise<any[]> => {
+const getRowsWithAValue = async (catalogConfig: ODSConfig, datasetId: string, constraints: { field: { name: string; type: string }; valeurs: { name: string }[] }[]): Promise<string> => {
   var odsParams = {
     select: '*',
     where: ''
