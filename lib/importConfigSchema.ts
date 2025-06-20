@@ -52,7 +52,7 @@ export const importConfigSchema: Record<string, any> = {
               type: "object",
               additionalProperties: true,
               properties: {
-                val: {
+                name: {
                   type: "string"
                 }
               }
