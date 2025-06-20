@@ -25,7 +25,7 @@ export const prepareResource = (catalogConfig: ODSConfig, odsDataset: ODSDataset
     description: odsDataset.metas?.default?.description ?? '',
     keywords: odsDataset.metas?.default?.keyword ?? [],
     format: 'csv',
-    url: catalogConfig.url + '/catalog/datasets/' + odsDataset.dataset_id + '/exports/csv',
+    url: catalogConfig.url + '/api/explore/v2.1/catalog/datasets/' + odsDataset.dataset_id + '/exports/csv',
     type: 'resource',
     // pas recup dans le schema ODS
     // license: odsDataset.metas?.default?.license ?? ''
