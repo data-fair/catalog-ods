@@ -2,8 +2,7 @@ import type { CatalogPlugin, CatalogMetadata, ListContext, DownloadResourceConte
 
 import { schema as configSchema, assertValid as assertConfigValid, type ODSConfig } from './types/config/index.ts'
 import capabilities from './lib/capabilities.ts'
-import { importConfigSchema } from './lib/importConfigSchema.ts'
-
+import { schema as importConfigSchema } from './types/importConfig/index.ts'
 // API Doc: https://data.economie.gouv.fr/api/explore/v2.1/console
 
 const list = async (context: ListContext<ODSConfig, typeof capabilities>) => {
@@ -16,15 +15,15 @@ const getResource = async (catalogConfig: ODSConfig, resourceId: string) => {
   return getResource(catalogConfig, resourceId)
 }
 
-export const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDir }: DownloadResourceContext<ODSConfig>) => {
-  const { downloadResource } = await import('./lib/imports.ts')
+const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDir }: DownloadResourceContext<ODSConfig>) => {
+  const { downloadResource } = await import('./lib/download.ts')
   return downloadResource({ catalogConfig, resourceId, importConfig, tmpDir })
 }
 
 const listFiltersSchema: Record<string, any> = {
   type: 'object',
   properties: {
-    partName: {
+    q: {
       title: 'Rechercher',
       type: 'string',
       default: '',

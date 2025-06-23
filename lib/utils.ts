@@ -18,7 +18,7 @@ export const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[
   return catalog
 }
 
-export const prepareResource = (catalogConfig: ODSConfig, odsDataset: ODSDataset): Resource => {
+const prepareResource = (catalogConfig: ODSConfig, odsDataset: ODSDataset): Resource => {
   const resource: Resource = {
     id: odsDataset.dataset_id,
     title: odsDataset.metas?.default?.title ?? '',

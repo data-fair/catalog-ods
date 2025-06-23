@@ -17,11 +17,12 @@
   },
   "files": [
     "./lib/**",
-    "./types/config/.type/**",
+    "./types/**",
     "index.ts"
   ],
   "imports": {
-    "#types": "./types/index.ts"
+    "#types": "./types/index.ts",
+    "#type/*": "./types/*"
   },
   "keywords": [
     "data-fair-catalogs-plugin"
