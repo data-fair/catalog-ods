@@ -2,8 +2,9 @@
 
 import { type ODSConfig } from '#types'
 import { strict as assert } from 'node:assert'
-import { it, describe, before, after } from 'node:test'
-import { getRowsWithAValue } from '../lib/imports.ts'
+import { it, describe } from 'node:test'
+import { getRowsWithAValue } from '../lib/download.ts'
+import { type FiltresDeLImport } from '../types/importConfig/index.ts'
 
 const catalogConfig: ODSConfig = {
   url: 'https://opendata.agenceore.fr'
@@ -26,7 +27,7 @@ describe('test the getRowsWithAValue function', () => {
   });
 
   it('test the downloadResource with constraint with no rows', async () => {
-    const constraint = [{ field: { name: 'codedepartement', type: 'text' }, valeurs: [{ name: '99999' }] }]  
+    const constraint: FiltresDeLImport = [{ field: { name: 'codedepartement', type: 'text' }, valeurs: [{ name: '99999' }] }]
     const rowsStr = await getRowsWithAValue(catalogConfig, datasetId, constraint)
     const rows = rowsStr.split('\r\n')
     assert.ok(Array.isArray(rows), 'Rows should be an array')
@@ -56,7 +57,7 @@ describe('test the getRowsWithAValue function', () => {
 
   it('test getRowsWithAValue with invalid constraints', async () => {
     try {
-      const constraint = [{ field: { name: 'invalid_field', type: 'text' }, valeurs: [{ name: '9999' }] }]  
+      const constraint = [{ field: { name: 'invalid_field', type: 'text' }, valeurs: [{ name: '9999' }] }]
       await getRowsWithAValue(catalogConfig, datasetId, constraint)
     } catch (error) {
       assert.ok(error instanceof Error, 'Error should be an instance of Error')
@@ -67,7 +68,7 @@ describe('test the getRowsWithAValue function', () => {
 
   it('test getRowsWithAValue with invalid constraint format', async () => {
     try {
-      const constraint = [{ field: { name: '1_test', type: 'text' }, valeurs: [{ name: '9999' }] }]  
+      const constraint = [{ field: { name: '1_test', type: 'text' }, valeurs: [{ name: '9999' }] }]
       await getRowsWithAValue(catalogConfig, datasetId, constraint)
     } catch (error) {
       assert.ok(error instanceof Error, 'Error should be an instance of Error')

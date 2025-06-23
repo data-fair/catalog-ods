@@ -2,7 +2,7 @@ import { type ODSConfig } from '#types'
 import axios from '@data-fair/lib-node/axios.js'
 import capabilities from './capabilities.ts'
 import { prepareCatalog } from './utils.ts'
-import type { ListContext, Folder, Resource, DownloadResourceContext } from '@data-fair/lib-common-types/catalog/index.js'
+import type { ListContext, Folder, Resource } from '@data-fair/lib-common-types/catalog/index.js'
 
 /**
  * Returns the catalog [list of dataset] from an ODS service
@@ -11,7 +11,7 @@ import type { ListContext, Folder, Resource, DownloadResourceContext } from '@da
  */
 const list = async (config: ListContext<ODSConfig, typeof capabilities>): Promise<{ count: number; results: (Folder | Resource)[]; path: Folder[] }> => {
   const odsParams: Record<string, any> = {}
-  if (config.params?.partName) odsParams.where = 'search("' + config.params.partName + '")'
+  if (config.params?.q) odsParams.where = 'search("' + config.params.q + '")'
   if (config.params?.size) odsParams.limit = config.params.size
   if (config.params?.page) odsParams.offset = (config.params.page - 1) * (config.params.size || 10)
 
@@ -49,66 +49,4 @@ const getResource = async (catalogConfig: ODSConfig, datasetId: string): Promise
   return res
 }
 
-const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDir }: DownloadResourceContext<ODSConfig>): Promise<string | undefined> => {
-  const dataset = await getRowsWithAValue(catalogConfig, resourceId, importConfig.filters)
-
-  const fs = await import('node:fs/promises')
-  const path = await import('path')
-  const destFile = path.join(tmpDir, `${resourceId}.csv`)
-
-  await fs.writeFile(destFile, dataset)
-  return destFile
-}
-
-/**
- * Returns the rows of a dataset that match the given constraints
- * @param catalogConfig the ODS configuration [ex: { url: 'https://example.com' }]
- * @param datasetId the dataset ID to fetch rows from
- * @param constraints the constraints to apply to the query, as a record of key-value pairs
- *                    where the key is the field name and the value is the value to match
- * @returns an array of rows that match the given constraints
- */
-const getRowsWithAValue = async (catalogConfig: ODSConfig, datasetId: string, constraints: { field: { name: string; type: string }; valeurs: { name: string }[] }[]): Promise<string> => {
-  var odsParams = {
-    select: '*',
-    where: ''
-  }
-
-  if (constraints && constraints[0] && constraints[0].field) {
-    // verifie si une cle ne commence pas par un chiffre
-    // constraints.forEach((cons: { field: string; }) => {
-    //   if (cons.field  && (typeof cons.field !== 'string' || /^\d/.test(cons.field)))
-    //     throw new Error(`Invalid field name: ${cons.field}. Field names cannot start with a digit.`)
-    // })
-
-    odsParams.where = constraints.map((cons: { valeurs: any[]; field: { name: string; type: string }; }) => {
-      if (/^\d/.test(cons.field.name)) {
-        throw new Error('Champ de filtrage invalide, il ne peut pas commencer par un chiffre')
-      }
-      return cons.valeurs.map((valeur: { name: string }) => {
-        switch (cons.field.type) {
-          case 'text':
-            return `${cons.field.name} = "${valeur.name}"`
-          case 'int':
-          case 'double':
-            return `${cons.field.name} = ${valeur.name}`
-          case 'date':
-          case 'datetime':
-            return `${cons.field.name} = date'${valeur.name}'`
-          default:
-            return `${cons.field.name} is ${valeur.name}`
-        }
-      }).join(' or ')
-    }).join(' and ')
-  }
-
-  try {
-    const dataset = (await axios.get(`${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${datasetId}/exports/csv`, { params: odsParams })).data
-    return dataset
-  } catch (error) {
-    console.error(`Error fetching dataset values ${error}`)
-    throw new Error('Erreur lors de la récuperation de la resource ODS')
-  }
-}
-
-export { list, getResource, downloadResource, getRowsWithAValue }
+export { list, getResource }
