@@ -20,19 +20,6 @@ const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDi
   return downloadResource({ catalogConfig, resourceId, importConfig, tmpDir })
 }
 
-const listFiltersSchema: Record<string, any> = {
-  type: 'object',
-  properties: {
-    q: {
-      title: 'Rechercher',
-      type: 'string',
-      default: '',
-    }
-  },
-  required: [],
-  additionalProperties: false
-}
-
 const metadata: CatalogMetadata<typeof capabilities> = {
   title: 'Catalog ODS',
   description: 'Importez des jeux de données depuis une solution Opendatasoft.',
@@ -44,7 +31,6 @@ const plugin: CatalogPlugin<ODSConfig, typeof capabilities> = {
   getResource,
   downloadResource,
   configSchema,
-  listFiltersSchema,
   importConfigSchema,
   assertConfigValid,
   metadata

@@ -35,7 +35,7 @@ const getRowsWithAValue = async (catalogConfig: ODSConfig, datasetId: string, co
     //     throw new Error(`Invalid field name: ${cons.field}. Field names cannot start with a digit.`)
     // })
 
-    odsParams.where = constraints.filter(cons => cons.field && cons.valeurs).map((cons: Filtre) => {
+    odsParams.where = constraints.map((cons: Filtre) => {
       if (/^\d/.test(cons.field.name)) {
         throw new Error('Champ de filtrage invalide, il ne peut pas commencer par un chiffre / erreur dans le champ')
       }

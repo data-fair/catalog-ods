@@ -21,6 +21,7 @@
       "items": {
         "type": "object",
         "title": "Filtre",
+        "required": ["field", "valeurs"],
         "properties": {
           "field": {
             "type": "object",

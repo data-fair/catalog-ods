@@ -10,6 +10,6 @@ export default [
   'importConfig' as const,
   // 'publishDataset' as const,
   // 'deletePublication' as const,
-  'additionalFilters' as const,
+  // 'additionalFilters' as const,
   'pagination' as const
 ]
