@@ -13,14 +13,14 @@ describe('test the getResource function', () => {
 
   it('test getResource with a valid configuration', async () => {
     // requete correspondante à : https://opendata.agenceore.fr/api/explore/v2.1/catalog/datasets
-    const res = await getResource(catalogConfig, 'registre-national-installation-production-stockage-electricite-agrege-311221')
+    const res = await getResource({ catalogConfig, resourceId: 'registre-national-installation-production-stockage-electricite-agrege-311221', secrets: {} })
     assert.ok(res.id, 'registre-national-installation-production-stockage-electricite-agrege-311221')
     assert.ok(res.title, 'Registre national des installations de production et de stockage d\'électricité (au 31/12/2021)')
   });
 
   it('test getResource with an invalid configuration (invalid url)', async () => {
     try {
-      await getResource({ url: 'https://example.com' }, 'registre-national-installation-production-stockage-electricite-agrege-311221')
+      await getResource({ catalogConfig: { url: 'https://example.com' }, resourceId: 'registre-national-installation-production-stockage-electricite-agrege-311221', secrets: {} })
     } catch (error) {
       assert.ok(error instanceof Error, 'Error should be an instance of Error')
       return;
@@ -30,7 +30,7 @@ describe('test the getResource function', () => {
 
   it('test getResource with an invalid resource id', async () => {
     try {
-      await getResource(catalogConfig, 'test')
+      await getResource({ catalogConfig, resourceId: 'test', secrets: {} })
     } catch (error) {
       assert.ok(error instanceof Error, 'Error should be an instance of Error')
       return;

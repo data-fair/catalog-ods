@@ -12,7 +12,8 @@ const catalogConfig: ODSConfig = {
 }
 const config: ListContext<ODSConfig, typeof capabilities> = {
   catalogConfig: catalogConfig,
-  params: { size: -1 }
+  params: { size: -1 },
+  secrets: {}
 }
 
 describe('test the list function', () => {
@@ -32,7 +33,8 @@ describe('test the list function', () => {
     try {
       await list({
         catalogConfig: { url: 'https://example.com' },
-        params: config.params
+        params: config.params,
+        secrets: {}
       })
     } catch (error) {
       assert.ok(error instanceof Error, 'Error should be an instance of Error')
@@ -45,7 +47,8 @@ describe('test the list function', () => {
     try {
       await list({
         catalogConfig: config.catalogConfig,
-        params: { size: 100000 } // the maximum (in ODS API) is 1000
+        params: { size: 100000 }, // the maximum (in ODS API) is 1000
+        secrets: {}
       })
     } catch (error) {
       assert.ok(error instanceof Error, 'Error should be an instance of Error')
