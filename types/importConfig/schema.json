@@ -1,18 +1,13 @@
 {
   "$id": "https://github.com/data-fair/catalog-ods/ods-importSchema",
-  "x-exports": [
-    "types",
-    "schema"
-  ],
+  "x-exports": ["types", "schema"],
   "title": "ImportConfigSchema",
   "layout": {
     "title": null
   },
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "filters"
-  ],
+  "required": ["filters"],
   "properties": {
     "filters": {
       "type": "array",
@@ -22,10 +17,7 @@
       "items": {
         "type": "object",
         "title": "Filtre",
-        "required": [
-          "field",
-          "valeurs"
-        ],
+        "required": ["field", "valeurs"],
         "properties": {
           "field": {
             "type": "object",
@@ -38,10 +30,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "name",
-              "type"
-            ],
+            "required": ["name", "type"],
             "additionalProperties": true,
             "layout": {
               "getItems": {
@@ -62,12 +51,6 @@
               "if": {
                 "expr": "parent.data?.field?.name?.length > 0",
                 "pure": false
-              },
-              "getItems": {
-                "url": "${context.catalogConfig.url}/api/explore/v2.1/catalog/datasets/${context.resourceId}/facets?facet=${parent.data?.field?.name}&where=search('{q}')",
-                "itemsResults": "data.facets[0].facets",
-                "itemTitle": "item.name",
-                "itemKey": "item.name"
               }
             },
             "items": {
@@ -77,9 +60,7 @@
                   "type": "string"
                 }
               },
-              "required": [
-                "name"
-              ],
+              "required": ["name"],
               "additionalProperties": true
             }
           }
