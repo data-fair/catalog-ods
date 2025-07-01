@@ -1,4 +1,4 @@
-import type { ODSConfig } from '#types'
+import type { ODSConfig, ODSDataset } from '#types'
 import axios from '@data-fair/lib-node/axios.js'
 import { type Filtre, type FiltresDeLImport } from '../types/importConfig/index.ts'
 import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/lib-common-types/catalog/index.js'
@@ -23,7 +23,7 @@ export const getResource = async (context: GetResourceContext<ODSConfig>): Retur
  * @returns the Resource corresponding to the id by this configuration
  */
 const getMetaData = async ({ catalogConfig, resourceId }: GetResourceContext<ODSConfig>): Promise<Resource> => {
-  let dataset
+  let dataset: ODSDataset
   try {
     dataset = (await axios.get(`${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}?select=exclude(features),exclude(attachments),exclude(alternative_exports),exclude(fields)`)).data
   } catch (e) {
@@ -36,10 +36,13 @@ const getMetaData = async ({ catalogConfig, resourceId }: GetResourceContext<ODS
     description: dataset.metas?.default?.description ?? '',
     keywords: dataset.metas?.default?.keyword ?? [],
     format: 'csv',
-    origin: catalogConfig.url + '/api/explore/v2.1/catalog/datasets/' + dataset.dataset_id + '/exports/csv',
-    license: dataset.metas?.default?.license,
+    origin: catalogConfig.url + '/explore/dataset/' + dataset.dataset_id,
+    // license: {
+    //   title: dataset.metas?.default?.license,
+    //   href: dataset.metas?.default?.license_url,
+    // },
     filePath: ''
-  }
+  } as Resource
 }
 
 /**

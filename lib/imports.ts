@@ -20,7 +20,7 @@ const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): Res
       title: odsDataset.metas?.default?.title ?? '',
       description: odsDataset.metas?.default?.description ?? '',
       format: 'csv',
-      origin: catalogConfig.url + '/api/explore/v2.1/catalog/datasets/' + odsDataset.dataset_id + '/exports/csv',
+      origin: catalogConfig.url + '/explore/dataset/' + odsDataset.dataset_id,
       type: 'resource'
     } as ResourceList[number])
   }
