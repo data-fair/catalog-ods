@@ -1,15 +1,38 @@
-import { type ODSConfig } from '#types'
+import type { ODSDataset, ODSConfig } from '#types'
 import axios from '@data-fair/lib-node/axios.js'
 import capabilities from './capabilities.ts'
-import { prepareCatalog } from './utils.ts'
-import type { ListContext, Folder, Resource, GetResourceContext } from '@data-fair/lib-common-types/catalog/index.js'
+import type { CatalogPlugin, ListContext } from '@data-fair/lib-common-types/catalog/index.js'
+
+type ResourceList = Awaited<ReturnType<CatalogPlugin['list']>>['results']
+
+/**
+ * Transform an ODS catalog into a Data-Fair catalog
+ * @param catalogConfig the ODS configuration [ex: { url: 'https://example.com' }]
+ * @param odsDataset the dataset to transform
+ * @returns an object containing the count of resources, the transformed resources, and an empty path array
+ */
+const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): ResourceList => {
+  const catalog: ResourceList = []
+
+  for (const odsDataset of odsCatalog) {
+    catalog.push({
+      id: odsDataset.dataset_id,
+      title: odsDataset.metas?.default?.title ?? '',
+      description: odsDataset.metas?.default?.description ?? '',
+      format: 'csv',
+      origin: catalogConfig.url + '/api/explore/v2.1/catalog/datasets/' + odsDataset.dataset_id + '/exports/csv',
+      type: 'resource'
+    } as ResourceList[number])
+  }
+  return catalog
+}
 
 /**
  * Returns the catalog [list of dataset] from an ODS service
  * @param config the ODS configuration
  * @returns the list of Resources available on this catalog
  */
-const list = async (config: ListContext<ODSConfig, typeof capabilities>): Promise<{ count: number; results: (Folder | Resource)[]; path: Folder[] }> => {
+export const list = async (config: ListContext<ODSConfig, typeof capabilities>): ReturnType<CatalogPlugin<ODSConfig>['list']> => {
   const odsParams: Record<string, any> = {}
   if (config.params?.q) odsParams.where = 'search("' + config.params.q + '")'
   if (config.params?.size) odsParams.limit = config.params.size
@@ -30,23 +53,3 @@ const list = async (config: ListContext<ODSConfig, typeof capabilities>): Promis
     path: []
   }
 }
-
-/**
- * Returns the ODS Dataset
- * @param catalogConfig the ODS configuration [ex: { url: 'https://example.com/api/explore/v2.1' }]
- * @param datasetId the dataset ID to fetch fields from
- * @returns the Resource corresponding to the id by this configuration
- */
-const getResource = async ({ catalogConfig, resourceId }: GetResourceContext<ODSConfig>): Promise<Resource> => {
-  let dataset
-  try {
-    dataset = (await axios.get(`${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}?select=exclude(features),exclude(attachments),exclude(alternative_exports),exclude(fields)`)).data
-  } catch (e) {
-    console.error(`Error fetching datasets from ODS ${e}`)
-    throw new Error('Erreur lors de la récuperation de la resource ODS')
-  }
-  const res = prepareCatalog(catalogConfig, [dataset])[0]
-  return res
-}
-
-export { list, getResource }
