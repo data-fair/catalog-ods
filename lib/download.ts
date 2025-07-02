@@ -1,7 +1,7 @@
 import type { ODSConfig, ODSDataset } from '#types'
 import axios from '@data-fair/lib-node/axios.js'
 import { type Filtre, type FiltresDeLImport } from '../types/importConfig/index.ts'
-import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/lib-common-types/catalog/index.js'
+import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/types-catalogs'
 
 /**
  * Retrieves a resource by first fetching its metadata and then downloading the actual resource.

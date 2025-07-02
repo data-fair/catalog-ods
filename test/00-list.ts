@@ -5,7 +5,7 @@ import { strict as assert } from 'node:assert'
 import { it, describe } from 'node:test'
 import { list } from '../lib/imports.ts'
 import capabilities from '../lib/capabilities.ts'
-import type { ListContext } from '@data-fair/lib-common-types/catalog/index.js'
+import type { ListContext } from '@data-fair/types-catalogs'
 
 const catalogConfig: ODSConfig = {
   url: 'https://opendata.agenceore.fr'

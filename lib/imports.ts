@@ -1,7 +1,7 @@
 import type { ODSDataset, ODSConfig } from '#types'
 import axios from '@data-fair/lib-node/axios.js'
 import capabilities from './capabilities.ts'
-import type { CatalogPlugin, ListContext } from '@data-fair/lib-common-types/catalog/index.js'
+import type { CatalogPlugin, ListContext } from '@data-fair/types-catalogs'
 
 type ResourceList = Awaited<ReturnType<CatalogPlugin['list']>>['results']
 
