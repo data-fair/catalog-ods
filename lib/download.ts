@@ -37,10 +37,10 @@ const getMetaData = async ({ catalogConfig, resourceId }: GetResourceContext<ODS
     keywords: dataset.metas?.default?.keyword ?? [],
     format: 'csv',
     origin: catalogConfig.url + '/explore/dataset/' + dataset.dataset_id,
-    // license: {
-    //   title: dataset.metas?.default?.license,
-    //   href: dataset.metas?.default?.license_url,
-    // },
+    license: {
+      title: dataset.metas?.default?.license,
+      href: dataset.metas?.default?.license_url,
+    },
     filePath: ''
   } as Resource
 }
