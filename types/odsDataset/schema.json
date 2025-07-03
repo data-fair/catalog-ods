@@ -93,6 +93,9 @@
             },
             "license": {
               "type": "string"
+            },
+            "license_url": {
+              "type": "string"
             }
           }
         }

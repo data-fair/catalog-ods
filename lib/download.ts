@@ -30,19 +30,22 @@ const getMetaData = async ({ catalogConfig, resourceId }: GetResourceContext<ODS
     console.error(`Error fetching datasets from ODS ${e}`)
     throw new Error('Erreur lors de la récuperation de la resource ODS')
   }
-  return {
+  const resource: Resource = {
     id: dataset.dataset_id,
     title: dataset.metas?.default?.title ?? '',
     description: dataset.metas?.default?.description ?? '',
     keywords: dataset.metas?.default?.keyword ?? [],
     format: 'csv',
     origin: catalogConfig.url + '/explore/dataset/' + dataset.dataset_id,
-    license: {
+    filePath: ''
+  }
+  if (dataset.metas?.default?.license && dataset.metas?.default?.license_url) {
+    resource.license = {
       title: dataset.metas?.default?.license,
       href: dataset.metas?.default?.license_url,
-    },
-    filePath: ''
-  } as Resource
+    }
+  }
+  return resource
 }
 
 /**
