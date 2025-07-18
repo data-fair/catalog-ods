@@ -1,9 +1,9 @@
 import type { ODSDataset, ODSConfig } from '#types'
 import axios from '@data-fair/lib-node/axios.js'
 import capabilities from './capabilities.ts'
-import type { CatalogPlugin, ListContext } from '@data-fair/types-catalogs'
+import type { CatalogPlugin, ListResourcesContext } from '@data-fair/types-catalogs'
 
-type ResourceList = Awaited<ReturnType<CatalogPlugin['list']>>['results']
+type ResourceList = Awaited<ReturnType<CatalogPlugin['listResources']>>['results']
 
 /**
  * Transform an ODS catalog into a Data-Fair catalog
@@ -32,7 +32,7 @@ const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): Res
  * @param config the ODS configuration
  * @returns the list of Resources available on this catalog
  */
-export const list = async (config: ListContext<ODSConfig, typeof capabilities>): ReturnType<CatalogPlugin<ODSConfig>['list']> => {
+export const listResources = async (config: ListResourcesContext<ODSConfig, typeof capabilities>): ReturnType<CatalogPlugin<ODSConfig>['listResources']> => {
   const odsParams: Record<string, any> = {}
   if (config.params?.q) odsParams.where = 'search("' + config.params.q + '")'
   if (config.params?.size) odsParams.limit = config.params.size

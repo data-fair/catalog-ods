@@ -2,6 +2,8 @@ import type { ODSConfig, ODSDataset } from '#types'
 import axios from '@data-fair/lib-node/axios.js'
 import { type Filtre, type FiltresDeLImport } from '../types/importConfig/index.ts'
 import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/types-catalogs'
+import path from 'path'
+import fs from 'fs'
 
 /**
  * Retrieves a resource by first fetching its metadata and then downloading the actual resource.
@@ -58,37 +60,20 @@ const getMetaData = async ({ catalogConfig, resourceId }: GetResourceContext<ODS
  * @returns A promise resolving to the file path of the downloaded CSV.
  * @throws If there is an error writing the file or fetching the dataset.
  */
-export const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDir }: GetResourceContext<ODSConfig>): Promise<string> => {
-  const dataset = await getRowsWithAValue(catalogConfig, resourceId, importConfig.filters)
-
-  const fs = await import('node:fs/promises')
-  const path = await import('path')
-  const destFile = path.join(tmpDir, `${resourceId}.csv`)
-
-  await fs.writeFile(destFile, dataset)
-  return destFile
-}
-
-/**
- * Returns the rows of a dataset that match the given constraints
- * @param catalogConfig the ODS configuration [ex: { url: 'https://example.com' }]
- * @param datasetId the dataset ID to fetch rows from
- * @param constraints the constraints to apply to the query, as a record of key-value pairs
- *                    where the key is the field name and the value is the value to match
- * @returns an array of rows that match the given constraints
- */
-export const getRowsWithAValue = async (catalogConfig: ODSConfig, datasetId: string, constraints: FiltresDeLImport): Promise<string> => {
-  const odsParams = {
-    select: '*',
-    where: ''
+export const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDir, log }: GetResourceContext<ODSConfig>): Promise<string> => {
+  const odsParams: Record<string, string> = {
+    select: '*'
   }
 
-  if (constraints && constraints[0]) {
-    odsParams.where = constraints.map((cons: Filtre) => {
+  const constraints: FiltresDeLImport = importConfig?.filters
+
+  if (constraints?.length) {
+    const where = constraints.map((cons: Filtre) => {
       if (/^\d/.test(cons.field.name)) {
-        throw new Error('Champ de filtrage invalide, il ne peut pas commencer par un chiffre / erreur dans le champ')
+        throw new Error('Champ de filtrage invalide : il ne peut pas commencer par un chiffre')
       }
-      return cons.valeurs.map((valeur) => {
+
+      const conditions = cons.valeurs.map(valeur => {
         switch (cons.field.type) {
           case 'text':
             return `${cons.field.name} = "${valeur.name}"`
@@ -102,17 +87,52 @@ export const getRowsWithAValue = async (catalogConfig: ODSConfig, datasetId: str
           case 'boolean':
             return `${cons.field.name} is ${valeur.name}`
           default:
-            throw new Error('Format du Champ de filtrage non pris en charge')
+            throw new Error('Type de champ non supporté dans les filtres')
         }
-      }).join(' or ')
+      })
+
+      return `(${conditions.join(' or ')})`
     }).join(' and ')
+
+    odsParams.where = where
   }
 
+  const url = `${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}/exports/csv`
+  const destFile = path.join(tmpDir, `${resourceId}.csv`)
+  const writer = fs.createWriteStream(destFile)
+
   try {
-    const dataset = (await axios.get(`${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${datasetId}/exports/csv`, { params: odsParams })).data
-    return dataset
+    const response = await axios.get(url, {
+      params: odsParams,
+      responseType: 'stream'
+    })
+
+    let downloadedBytes = 0
+    log.task(`download ${resourceId}`, 'File size: unknow', NaN)
+
+    response.data.on('data', (chunk: any) => {
+      downloadedBytes += chunk.length
+      log.progress(`download ${resourceId}`, downloadedBytes)
+    })
+
+    response.data.pipe(writer)
+
+    return new Promise<string>((resolve, reject) => {
+      response.data.pipe(writer)
+
+      writer.on('finish', () => resolve(destFile))
+      writer.on('error', (err: any) => {
+        fs.unlink(destFile, () => { })
+        reject(err)
+      })
+
+      response.data.on('error', (err: any) => {
+        fs.unlink(destFile, () => { })
+        reject(err)
+      })
+    })
   } catch (error) {
-    console.error(`Error fetching dataset values ${error}`)
-    throw new Error('Erreur lors de la récuperation de la resource ODS')
+    console.error('Erreur lors de la récupération du dataset ODS (stream)', error)
+    throw new Error('Erreur pendant le téléchargement du dataset ODS en streaming')
   }
 }

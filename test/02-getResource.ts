@@ -7,6 +7,7 @@ import { getResource } from '../lib/download.ts'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
+import { logFunctions } from './test-utils.ts'
 
 const catalogConfig: ODSConfig = {
   url: 'https://opendata.agenceore.fr'
@@ -33,7 +34,8 @@ describe('test the getResource function', () => {
       resourceId: 'registre-national-installation-production-stockage-electricite-agrege-311221',
       secrets: {},
       importConfig: {},
-      tmpDir
+      tmpDir,
+      log: logFunctions
     })
     assert.ok(res)
     assert.strictEqual(res.id, 'registre-national-installation-production-stockage-electricite-agrege-311221')
@@ -58,7 +60,8 @@ describe('test the getResource function', () => {
         resourceId: 'registre-national-installation-production-stockage-electricite-agrege-311221',
         secrets: {},
         importConfig: {},
-        tmpDir
+        tmpDir,
+        log: logFunctions
       })
     } catch (error) {
       assert.ok(error instanceof Error, 'Error should be an instance of Error')
@@ -74,7 +77,8 @@ describe('test the getResource function', () => {
         resourceId: 'test',
         secrets: {},
         importConfig: {},
-        tmpDir
+        tmpDir,
+        log: logFunctions
       })
     } catch (error) {
       assert.ok(error instanceof Error, 'Error should be an instance of Error')

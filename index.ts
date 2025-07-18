@@ -7,9 +7,9 @@ import { schema as importConfigSchema } from './types/importConfig/index.ts'
 
 const plugin: CatalogPlugin<ODSConfig, typeof capabilities> = {
   async prepare () { return {} },
-  async list (context) {
-    const { list } = await import('./lib/imports.ts')
-    return list(context)
+  async listResources (context) {
+    const { listResources } = await import('./lib/imports.ts')
+    return listResources(context)
   },
   async getResource (context) {
     const { getResource } = await import('./lib/download.ts')

@@ -1,80 +1,69 @@
-/* eslint-disable */
-
-import { type ODSConfig } from '#types'
 import { strict as assert } from 'node:assert'
-import { it, describe } from 'node:test'
-import { getRowsWithAValue } from '../lib/download.ts'
-import { type FiltresDeLImport } from '../types/importConfig/index.ts'
+import { test, before, after } from 'node:test'
+import { downloadResource } from '../lib/download.ts'
+import { tmpdir } from 'node:os'
+import { mkdirSync, existsSync, readFileSync, rmSync } from 'node:fs'
+import path from 'node:path'
+import type { GetResourceContext } from '@data-fair/types-catalogs'
+import type { FiltresDeLImport } from '../types/importConfig/index.ts'
+import type { ODSConfig } from '#types'
+import { logFunctions } from './test-utils.ts'
+
+const tmpDir = path.join(tmpdir(), 'ods-test')
+const datasetId = 'nombre-installation-production-stockage-electricite-31122017'
 
 const catalogConfig: ODSConfig = {
   url: 'https://opendata.agenceore.fr'
 }
 
-const datasetId = 'nombre-installation-production-stockage-electricite-31122017'
+const constraints: FiltresDeLImport = [
+  { field: { name: 'codedepartement', type: 'text' }, valeurs: [{ name: '56' }] }
+]
 
-const constraints =
-  [{ field: { name: 'codedepartement', type: 'text' }, valeurs: [{ name: '56' }] }]
+const context: GetResourceContext<ODSConfig> = {
+  catalogConfig,
+  resourceId: datasetId,
+  importConfig: { filters: constraints },
+  tmpDir,
+  secrets: {},
+  log: logFunctions
+}
 
+before(() => {
+  if (!existsSync(tmpDir)) mkdirSync(tmpDir)
+})
 
+after(() => {
+  rmSync(tmpDir, { recursive: true, force: true })
+})
 
-describe('test the getRowsWithAValue function', () => {
+test('should stream and write CSV file with valid constraints', async () => {
+  const filePath = await downloadResource(context)
+  assert.ok(filePath.endsWith('.csv'), 'File path should end with .csv')
+  assert.ok(existsSync(filePath), 'File should exist')
 
-  it('test getRowsWithAValue with a valid dataset and constraints', async () => {
-    const rowsStr = await getRowsWithAValue(catalogConfig, datasetId, constraints)
-    const rows = rowsStr.split('\n')
-    assert.ok(Array.isArray(rows), 'Rows should be an array')
-    assert.ok(rows.length > 1, 'Rows array should not be empty')
-  });
+  const content = readFileSync(filePath, 'utf-8')
+  const rows = content.split('\n')
+  assert.ok(rows.length > 1, 'CSV should contain multiple rows (including header)')
+})
 
-  it('test the downloadResource with constraint with no rows', async () => {
-    const constraint: FiltresDeLImport = [{ field: { name: 'codedepartement', type: 'text' }, valeurs: [{ name: '99999' }] }]
-    const rowsStr = await getRowsWithAValue(catalogConfig, datasetId, constraint)
-    const rows = rowsStr.split('\r\n')
-    assert.ok(Array.isArray(rows), 'Rows should be an array')
-    assert.ok(rows.length == 1 || rows[1] === '', 'Rows array should be empty') // 1 pour le header du csv + 1 pour un fin de ligne
+test('should throw for invalid datasetId', async () => {
+  await assert.rejects(async () => {
+    await downloadResource({ ...context, resourceId: 'invalid-dataset-id' })
+  }, /Erreur pendant le téléchargement/, 'Expected error for invalid datasetId')
+})
 
-  });
+test('should throw for invalid catalog URL', async () => {
+  await assert.rejects(async () => {
+    await downloadResource({ ...context, catalogConfig: { url: 'https://example.com' } })
+  }, /Erreur pendant le téléchargement/, 'Expected error for invalid catalog URL')
+})
 
-  it('test getRowsWithAValue with a catalog config', async () => {
-    try {
-      await getRowsWithAValue({ url: 'https://example.com' }, datasetId, constraints)
-    } catch (error) {
-      assert.ok(error instanceof Error, 'Error should be an instance of Error')
-      return;
-    }
-    assert.fail('Expected an error to be thrown for invalid datasetId');
-  });
-
-  it('test getRowsWithAValue with a invalid dataset', async () => {
-    try {
-      await getRowsWithAValue(catalogConfig, 'invalid-dataset-id', constraints)
-    } catch (error) {
-      assert.ok(error instanceof Error, 'Error should be an instance of Error')
-      return;
-    }
-    assert.fail('Expected an error to be thrown for invalid datasetId');
-  });
-
-  it('test getRowsWithAValue with invalid constraints', async () => {
-    try {
-      const constraint = [{ field: { name: 'invalid_field', type: 'text' }, valeurs: [{ name: '9999' }] }]
-      await getRowsWithAValue(catalogConfig, datasetId, constraint)
-    } catch (error) {
-      assert.ok(error instanceof Error, 'Error should be an instance of Error')
-      return;
-    }
-    assert.fail('Expected an error to be thrown for invalid constraints');
-  });
-
-  it('test getRowsWithAValue with invalid constraint format', async () => {
-    try {
-      const constraint = [{ field: { name: '1_test', type: 'text' }, valeurs: [{ name: '9999' }] }]
-      await getRowsWithAValue(catalogConfig, datasetId, constraint)
-    } catch (error) {
-      assert.ok(error instanceof Error, 'Error should be an instance of Error')
-      return;
-    }
-    assert.fail('Expected an error to be thrown for invalid constraints');
-  });
-
-});
+test('should throw for invalid constraint format (field name starting with digit)', async () => {
+  const constraint: FiltresDeLImport = [
+    { field: { name: '1badfield', type: 'text' }, valeurs: [{ name: 'test' }] }
+  ]
+  await assert.rejects(async () => {
+    await downloadResource({ ...context, importConfig: { filters: constraint } })
+  }, /Champ de filtrage invalide/, 'Expected validation error on constraint field name')
+})
