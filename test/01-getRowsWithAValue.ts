@@ -45,6 +45,11 @@ test('should stream and write CSV file with valid constraints', async () => {
   const content = readFileSync(filePath, 'utf-8')
   const rows = content.split('\n')
   assert.ok(rows.length > 1, 'CSV should contain multiple rows (including header)')
+  const codedepartementIndex = rows[0].split(';').indexOf('codedepartement')
+  assert.ok(rows.slice(1).every(elt =>
+    elt === '' ||
+    elt === '\n' ||
+    elt.split(';')[codedepartementIndex] === '56'))
 })
 
 test('should throw for invalid datasetId', async () => {
