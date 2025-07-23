@@ -118,8 +118,6 @@ export const downloadResource = async ({ catalogConfig, resourceId, importConfig
     response.data.pipe(writer)
 
     return new Promise<string>((resolve, reject) => {
-      response.data.pipe(writer)
-
       writer.on('finish', () => resolve(destFile))
       writer.on('error', (err: any) => {
         fs.unlink(destFile, () => { })
@@ -133,6 +131,7 @@ export const downloadResource = async ({ catalogConfig, resourceId, importConfig
     })
   } catch (error) {
     console.error('Erreur lors de la récupération du dataset ODS (stream)', error)
+    log.error('Erreur lors de la récupération du dataset ODS (stream)', error)
     throw new Error('Erreur pendant le téléchargement du dataset ODS en streaming')
   }
 }
