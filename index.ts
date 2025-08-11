@@ -1,12 +1,15 @@
 import type { CatalogPlugin } from '@data-fair/types-catalogs'
-
-import { schema as configSchema, assertValid as assertConfigValid, type ODSConfig } from './types/config/index.ts'
-import capabilities from './lib/capabilities.ts'
-import { schema as importConfigSchema } from './types/importConfig/index.ts'
+import { configSchema, assertConfigValid, type ODSConfig } from '#types'
+import { type ODSCapabilities, capabilities } from './lib/capabilities.ts'
+import { importConfigSchema } from '#types'
 // API Doc: https://data.economie.gouv.fr/api/explore/v2.1/console
 
-const plugin: CatalogPlugin<ODSConfig, typeof capabilities> = {
-  async prepare () { return {} },
+const plugin: CatalogPlugin<ODSConfig, ODSCapabilities> = {
+  async prepare (context) {
+    const prepare = (await import('./lib/prepare.ts')).default
+    return prepare(context)
+  },
+
   async listResources (context) {
     const { listResources } = await import('./lib/imports.ts')
     return listResources(context)

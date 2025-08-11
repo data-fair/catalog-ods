@@ -1,27 +1,54 @@
 {
   "$id": "https://github.com/data-fair/catalog-ods/ods-importSchema",
-  "x-exports": ["types", "schema"],
+  "x-exports": [
+    "types",
+    "schema"
+  ],
   "title": "ImportConfigSchema",
   "layout": {
     "title": null
   },
   "type": "object",
   "additionalProperties": false,
-  "required": ["filters"],
+  "required": [
+    "filters"
+  ],
   "properties": {
     "filters": {
       "type": "array",
-      "title": "Filtres de l'import",
-      "description": "Sélectionnez une colonne et une ou plusieurs valeurs. Seules les lignes correspondant à ces critères seront importées.",
+      "title": "Import filters",
+      "x-i18n-title": {
+        "fr": "Filtres de l'import"
+      },
+      "description": "Select a column and one or more values. Only rows matching these criteria will be imported.",
+      "x-i18n-description": {
+        "fr": "Sélectionnez une colonne et une ou plusieurs valeurs. Seules les lignes correspondant à ces critères seront importées."
+      },
+      "layout": {
+        "density": "comfortable"
+      },
       "default": [],
       "items": {
         "type": "object",
-        "title": "Filtre",
-        "required": ["field", "valeurs"],
+        "title": "Filter",
+        "x-i18n-title": {
+          "fr": "Filtre"
+        },
+        "required": [
+          "field",
+          "vals"
+        ],
         "properties": {
           "field": {
             "type": "object",
-            "title": "Colonne de filtre",
+            "title": "Field to filter on",
+            "x-i18n-title": {
+              "fr": "Champ à filtrer"
+            },
+            "description": "Field to filter on",
+            "x-i18n-description": {
+              "fr": "Champ à filtrer"
+            },
             "properties": {
               "name": {
                 "type": "string"
@@ -30,27 +57,39 @@
                 "type": "string"
               }
             },
-            "required": ["name", "type"],
+            "required": [
+              "name",
+              "type"
+            ],
             "additionalProperties": true,
             "layout": {
               "getItems": {
                 "url": "${context.catalogConfig.url}/api/explore/v2.1/catalog/datasets/${context.resourceId}?select=fields",
-                "itemsResults": "data.fields",
-                "itemTitle": "item.name",
+                "itemsResults": "data.fields ?? []",
                 "itemKey": "item.name"
               }
             }
           },
-          "valeurs": {
+          "vals": {
             "type": "array",
-            "title": "Valeurs",
+            "title": "Values",
+            "x-i18n-title": {
+              "fr": "Valeurs"
+            },
+            "description": "Values to filter on",
+            "x-i18n-description": {
+              "fr": "Valeurs à filtrer"
+            },
+            "default": [],
             "layout": {
+              "if": "!!parent.data?.field?.name",
               "props": {
                 "clearable": true
               },
-              "if": {
-                "expr": "parent.data?.field?.name?.length > 0",
-                "pure": false
+              "getItems": {
+                "url": "${context.catalogConfig.url}/api/explore/v2.1/catalog/datasets/${context.resourceId}/facets?facet=facet(name='${parent.data?.field?.name}',sort='alphanum')&where=search('{q}')",
+                "itemsResults": "data.facets[0]?.facets ?? []",
+                "itemKey": "item.name"
               }
             },
             "items": {
@@ -60,8 +99,74 @@
                   "type": "string"
                 }
               },
-              "required": ["name"],
-              "additionalProperties": true
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    },
+    "attachments": {
+      "type": "array",
+      "title": "Attachments",
+      "x-i18n-title": {
+        "fr": "Pièces jointes"
+      },
+      "description": "Attachments associated with the import. Attachments will not be re-imported during scheduled data updates.",
+      "x-i18n-description": {
+        "fr": "Liste des pièces jointes associées à l'import. Les pièces jointes ne seront pas réimportées lors des mises à jour planifiées des données."
+      },
+      "default": [],
+      "layout": {
+        "props": {
+          "clearable": true
+        },
+        "getItems": {
+          "url": "${context.catalogConfig.url}/api/explore/v2.1/catalog/datasets/${context.resourceId}/attachments",
+          "itemsResults": "data.attachments",
+          "itemTitle": "item.metas.title",
+          "itemKey": "item.metas.id  ?? item.metas.title"
+        }
+      },
+      "items": {
+        "type": "object",
+        "title": "Attachment",
+        "x-i18n-title": {
+          "fr": "Pièce jointe"
+        },
+        "required": [
+          "href",
+          "metas"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "href": {
+            "type": "string"
+          },
+          "metas": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "mimetype",
+              "url"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "mimetype": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
             }
           }
         }

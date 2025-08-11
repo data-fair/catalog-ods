@@ -1,13 +1,13 @@
 import type { ODSDataset, ODSConfig } from '#types'
-import axios from '@data-fair/lib-node/axios.js'
 import capabilities from './capabilities.ts'
+import axios from '@data-fair/lib-node/axios.js'
 import type { CatalogPlugin, ListResourcesContext } from '@data-fair/types-catalogs'
 
 type ResourceList = Awaited<ReturnType<CatalogPlugin['listResources']>>['results']
 
 /**
  * Transform an ODS catalog into a Data-Fair catalog
- * @param catalogConfig the ODS configuration [ex: { url: 'https://example.com' }]
+ * @param catalogConfig the ODS configuration
  * @param odsDataset the dataset to transform
  * @returns an object containing the count of resources, the transformed resources, and an empty path array
  */
@@ -19,7 +19,7 @@ const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): Res
       id: odsDataset.dataset_id,
       title: odsDataset.metas?.default?.title ?? '',
       description: odsDataset.metas?.default?.description ?? '',
-      format: 'csv',
+      format: odsDataset.features?.some((feature) => feature === 'geo') ? 'geojson' : 'csv',
       origin: catalogConfig.url + '/explore/dataset/' + odsDataset.dataset_id,
       type: 'resource'
     } as ResourceList[number])
@@ -34,13 +34,13 @@ const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): Res
  */
 export const listResources = async (config: ListResourcesContext<ODSConfig, typeof capabilities>): ReturnType<CatalogPlugin<ODSConfig>['listResources']> => {
   const odsParams: Record<string, any> = {}
-  if (config.params?.q) odsParams.where = 'search("' + config.params.q + '")'
+  if (config.params?.q) odsParams.where = 'search("' + encodeURIComponent(config.params.q) + '")'
   if (config.params?.size) odsParams.limit = config.params.size
   if (config.params?.page) odsParams.offset = (config.params.page - 1) * (config.params.size || 10)
 
-  let res
+  let res: { results: ODSDataset[]; total_count: number }
   try {
-    res = (await axios.get(`${config.catalogConfig.url}/api/explore/v2.1/catalog/datasets?select=exclude(features),exclude(attachments),exclude(alternative_exports),exclude(fields)`, { params: odsParams })).data
+    res = (await axios.get(`${config.catalogConfig.url}/api/explore/v2.1/catalog/datasets?select=exclude(attachments),exclude(alternative_exports),exclude(fields)`, { params: odsParams })).data
   } catch (e) {
     console.error(`Error fetching datasets from ODS ${e}`)
     throw new Error('Erreur lors de la récuperation de la resource ODS')

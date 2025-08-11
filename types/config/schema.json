@@ -22,6 +22,87 @@
       "pattern": "^https?://.*[^/]$",
       "examples": [
         "https://data.mon-domaine.fr"
-      ]}
+      ]
+    },
+    "themes": {
+      "type": "array",
+      "title": "ODS and Data Fair themes bindings",
+      "x-i18n-title": {
+        "fr": "Correspondance des thèmes ODS et Data Fair"
+      },
+      "description": "Themes bindings between ODS themes and Data Fair themes",
+      "x-i18n-description": {
+        "fr": "Permet de de lier les thèmes ODS et les thèmes Data Fair. Les thèmes d'ODS affichés sont ceux présents dans le catalogue ODS."
+      },
+      "layout": {
+        "comp": "list",
+        "listEditMode": "inline",
+        "density": "compact",
+        "getItems": {
+          "url": "${parent.data?.url}/api/explore/v2.1/catalog/facets?facet=theme",
+          "itemsResults": "data.facets[0]?.facets",
+          "itemKey": "item.value"
+        }
+      },
+      "items": {
+        "type": "object",
+        "required": [
+          "value",
+          "dataFairThemes"
+        ],
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "ODS theme",
+            "x-i18n-title": {
+              "fr": "Thème ODS"
+            },
+            "readOnly": true
+          },
+          "dataFairThemes": {
+            "type": "array",
+            "title": "Thèmes Data Fair",
+            "description": "Topics used by Data Fair. These topics should be created in Data Fair before using them here.",
+            "x-i18n-description": {
+              "fr": "Les topics utilisés par Data Fair. Ces topics doivent être préalablement créés dans Data Fair depuis l'onglet *Thématiques* des paramètres."
+            },
+            "default": [],
+            "layout": {
+              "props": {
+                "clearable": true
+              },
+              "getItems": {
+                "url": "/data-fair/api/v1/settings/${context.owner.type}/${context.owner.id}/topics",
+                "itemsResults": "data",
+                "itemKey": "item.title",
+                "itemTitle": "item.title",
+                "itemIcon": "item.icon?.svg"
+              }
+            },
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "title"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }

@@ -96,6 +96,12 @@
             },
             "license_url": {
               "type": "string"
+            },
+            "theme": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -119,8 +125,7 @@
             "type": "object"
           },
           "description": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           }
         }
       }
