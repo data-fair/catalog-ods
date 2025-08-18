@@ -34,7 +34,10 @@ const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): Res
  */
 export const listResources = async (config: ListResourcesContext<ODSConfig, typeof capabilities>): ReturnType<CatalogPlugin<ODSConfig>['listResources']> => {
   const odsParams: Record<string, any> = {}
-  if (config.params?.q) odsParams.where = 'search("' + encodeURIComponent(config.params.q) + '")'
+  if (config.params?.q) {
+    config.params.q = config.params.q.replace('"', '')
+    odsParams.where = 'search("' + config.params.q + '")'
+  }
   if (config.params?.size) odsParams.limit = config.params.size
   if (config.params?.page) odsParams.offset = (config.params.page - 1) * (config.params.size || 10)
 
