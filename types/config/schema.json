@@ -11,6 +11,29 @@
   "required": [
     "url"
   ],
+  "layout": [
+    "url",
+    {
+      "comp": "expansion-panels",
+      "children": [
+        {
+          "title": "ODS and Data Fair themes bindings",
+          "x-i18n-title": {
+            "fr": "Correspondance des thèmes ODS et Data Fair"
+          },
+          "children": [
+            {
+              "markdown": "You can link one (or several) Data Fair themes to each ODS theme.",
+              "x-i18n-markdown": {
+                "fr": "Vous pouvez associer pour chaque <strong>thème ODS</strong> une ou plusieurs <strong>thématiques Data Fair</strong>. Ces thématiques doivent être préalablement créées sur Data Fair depuis l'onglet <a href=\"/data-fair/settings\" target=\"_blank\" rel=\"noopener noreferrer\"><strong>Thématiques</strong></a> dans les paramètres."
+              }
+            },
+            "themes"
+          ]
+        }
+      ]
+    }
+  ],
   "properties": {
     "url": {
       "type": "string",
@@ -26,14 +49,7 @@
     },
     "themes": {
       "type": "array",
-      "title": "ODS and Data Fair themes bindings",
-      "x-i18n-title": {
-        "fr": "Correspondance des thèmes ODS et Data Fair"
-      },
-      "description": "Themes bindings between ODS themes and Data Fair themes",
-      "x-i18n-description": {
-        "fr": "Permet de de lier les thèmes ODS et les thèmes Data Fair. Les thèmes d'ODS affichés sont ceux présents dans le catalogue ODS."
-      },
+      "title": "",
       "layout": {
         "comp": "list",
         "listEditMode": "inline",
@@ -57,20 +73,20 @@
             "x-i18n-title": {
               "fr": "Thème ODS"
             },
-            "readOnly": true
+            "readOnly": true,
+            "layout": {
+              "cols": 6
+            }
           },
           "dataFairThemes": {
             "type": "array",
             "title": "Thèmes Data Fair",
-            "description": "Topics used by Data Fair. These topics should be created in Data Fair before using them here.",
-            "x-i18n-description": {
-              "fr": "Les topics utilisés par Data Fair. Ces topics doivent être préalablement créés dans Data Fair depuis l'onglet *Thématiques* des paramètres."
-            },
             "default": [],
             "layout": {
               "props": {
                 "clearable": true
               },
+              "cols": 6,
               "getItems": {
                 "url": "/data-fair/api/v1/settings/${context.owner.type}/${context.owner.id}/topics",
                 "itemsResults": "data",
