@@ -19,7 +19,7 @@ const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): Res
       id: odsDataset.dataset_id,
       title: odsDataset.metas?.default?.title ?? '',
       description: odsDataset.metas?.default?.description ?? '',
-      format: odsDataset.features?.some((feature) => feature === 'geo') ? 'geojson' : 'csv',
+      format: 'csv',
       origin: catalogConfig.url + '/explore/dataset/' + odsDataset.dataset_id,
       type: 'resource'
     } as ResourceList[number])
@@ -35,7 +35,7 @@ const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): Res
 export const listResources = async (config: ListResourcesContext<ODSConfig, typeof capabilities>): ReturnType<CatalogPlugin<ODSConfig>['listResources']> => {
   const odsParams: Record<string, any> = {}
   if (config.params?.q) {
-    config.params.q = config.params.q.replace('"', '')
+    config.params.q = config.params.q.replaceAll('"', '')
     odsParams.where = 'search("' + config.params.q + '")'
   }
   if (config.params?.size) odsParams.limit = config.params.size

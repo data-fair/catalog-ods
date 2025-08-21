@@ -113,23 +113,25 @@ describe('test the getResource function with mock config', () => {
     assert.strictEqual(content, mockResponse)
   })
 
-  it('assert that getResource exports in geojson format if available', async () => {
+  it('should export x-refersTo for geo_point_2d fields in schema', async () => {
     const catalogMockConfig: ODSConfig = {
       url: 'https://example.com',
       themes: []
     }
-    const resourceId = 'geojson-example-id'
+    const resourceId = 'geo-point-example-id'
     const mockMetaData: ODSDataset = {
       dataset_id: resourceId,
       metas: {
         default: {
-          title: 'GeoJSON Example',
-          description: 'This is a GeoJSON example dataset.',
-          license: 'CC-BY-4.0',
-          license_url: 'https://example.com/license'
+          title: 'Geo Point Example',
+          description: 'Dataset with geo_point_2d field.',
         }
       },
-      features: ['analyse', 'geo']
+      features: ['analyse', 'geo'],
+      fields: [
+        { name: 'location', type: 'geo_point_2d' },
+        { name: 'other', type: 'text' }
+      ]
     }
 
     nock(catalogMockConfig.url)
@@ -140,13 +142,13 @@ describe('test the getResource function with mock config', () => {
       .reply(200, mockMetaData)
 
     nock(catalogMockConfig.url)
-      .get(`/api/explore/v2.1/catalog/datasets/${resourceId}/exports/geojson`)
+      .get(`/api/explore/v2.1/catalog/datasets/${resourceId}/exports/csv`)
       .query({
         select: '*',
         compressed: true
       })
       .reply(200, () => new Readable({
-        read () { this.push('{"type":"FeatureCollection","features":[]}'); this.push(null) }
+        read () { this.push(null) }
       }))
 
     const resource = await getResource({
@@ -158,8 +160,119 @@ describe('test the getResource function with mock config', () => {
       log: logFunctions
     })
 
-    assert.strictEqual(resource.format, 'geojson', 'The resource format should be geojson')
-    assert.ok(resource.filePath.endsWith('.geojson.gz'), 'The resource file path should end with .geojson')
+    assert.ok(resource.schema, 'Resource should have a schema')
+    const geoField = resource.schema?.find(f => f.key === 'location')
+    assert.ok(geoField, 'Schema should contain geo_point_2d field')
+    assert.strictEqual(geoField?.['x-refersTo'], 'http://www.w3.org/2003/01/geo/wgs84_pos#lat_long', 'geo_point_2d should have correct x-refersTo')
+  })
+
+  it('should export x-refersTo for geo_shape fields in schema', async () => {
+    const catalogMockConfig: ODSConfig = {
+      url: 'https://example.com',
+      themes: []
+    }
+    const resourceId = 'geo-shape-example-id'
+    const mockMetaData: ODSDataset = {
+      dataset_id: resourceId,
+      metas: {
+        default: {
+          title: 'Geo Shape Example',
+          description: 'Dataset with geo_shape field.',
+        }
+      },
+      features: ['analyse', 'geo'],
+      fields: [
+        { name: 'geometry', type: 'geo_shape' },
+        { name: 'other', type: 'text' }
+      ]
+    }
+
+    nock(catalogMockConfig.url)
+      .get(`/api/explore/v2.1/catalog/datasets/${resourceId}`)
+      .query({
+        select: 'exclude(attachments),exclude(alternative_exports)'
+      })
+      .reply(200, mockMetaData)
+
+    nock(catalogMockConfig.url)
+      .get(`/api/explore/v2.1/catalog/datasets/${resourceId}/exports/csv`)
+      .query({
+        select: '*',
+        compressed: true
+      })
+      .reply(200, () => new Readable({
+        read () { this.push(null) }
+      }))
+
+    const resource = await getResource({
+      catalogConfig: catalogMockConfig,
+      resourceId,
+      secrets: {},
+      importConfig: { filters: [], attachments: [] },
+      tmpDir,
+      log: logFunctions
+    })
+
+    assert.ok(resource.schema, 'Resource should have a schema')
+    const geoField = resource.schema?.find(f => f.key === 'geometry')
+    assert.ok(geoField, 'Schema should contain geo_shape field')
+    assert.strictEqual(geoField?.['x-refersTo'], 'https://purl.org/geojson/vocab#geometry', 'geo_shape should have correct x-refersTo')
+  })
+
+  it('should not export x-refersTo for geo_point_2d if geo_shape is present', async () => {
+    const catalogMockConfig: ODSConfig = {
+      url: 'https://example.com',
+      themes: []
+    }
+    const resourceId = 'geo-mixed-example-id'
+    const mockMetaData: ODSDataset = {
+      dataset_id: resourceId,
+      metas: {
+        default: {
+          title: 'Geo Mixed Example',
+          description: 'Dataset with geo_point_2d and geo_shape fields.',
+        }
+      },
+      features: ['analyse', 'geo'],
+      fields: [
+        { name: 'location', type: 'geo_point_2d' },
+        { name: 'geometry', type: 'geo_shape' }
+      ]
+    }
+
+    nock(catalogMockConfig.url)
+      .get(`/api/explore/v2.1/catalog/datasets/${resourceId}`)
+      .query({
+        select: 'exclude(attachments),exclude(alternative_exports)'
+      })
+      .reply(200, mockMetaData)
+
+    nock(catalogMockConfig.url)
+      .get(`/api/explore/v2.1/catalog/datasets/${resourceId}/exports/csv`)
+      .query({
+        select: '*',
+        compressed: true
+      })
+      .reply(200, () => new Readable({
+        read () { this.push(null) }
+      }))
+
+    const resource = await getResource({
+      catalogConfig: catalogMockConfig,
+      resourceId,
+      secrets: {},
+      importConfig: { filters: [], attachments: [] },
+      tmpDir,
+      log: logFunctions
+    })
+
+    assert.ok(resource.schema, 'Resource should have a schema')
+    const geoPointField = resource.schema?.find(f => f.key === 'location')
+    const geoShapeField = resource.schema?.find(f => f.key === 'geometry')
+    assert.ok(geoPointField, 'Schema should contain geo_point_2d field')
+    assert.ok(geoShapeField, 'Schema should contain geo_shape field')
+    assert.strictEqual(geoPointField?.['x-refersTo'], undefined, 'geo_point_2d should not have x-refersTo if geo_shape is present')
+    assert.strictEqual(geoShapeField?.['x-refersTo'], 'https://purl.org/geojson/vocab#geometry', 'geo_shape should have correct x-refersTo')
   })
 
   it('should query with the correct fields in the "where" clause when exporting a resource', async () => {
@@ -386,6 +499,9 @@ describe('test the getResource function with mock config', () => {
     const invalidResourceId = 'invalid-id'
     nock(catalogMockConfig.url)
       .get(`/api/explore/v2.1/catalog/datasets/${invalidResourceId}`)
+      .query({
+        select: 'exclude(attachments),exclude(alternative_exports)'
+      })
       .reply(404, { error: 'Dataset not found' })
 
     await assert.rejects(async () => {

@@ -83,7 +83,7 @@ describe('test the listResources function', () => {
           id: 'dataset1',
           title: 'Mock Dataset 1',
           description: '',
-          format: 'geojson',
+          format: 'csv',
           origin: catalogConfig.url + '/explore/dataset/dataset1',
           type: 'resource'
         },

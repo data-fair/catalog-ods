@@ -13,7 +13,7 @@ export const getResource = async (context: GetResourceContext<ODSConfig>): Retur
   await context.log.step('Téléchargement du fichier')
   const dataset = await getMetaData(context)
   dataset.attachments = await getAttachments(context)
-  dataset.filePath = await downloadResource(context, dataset.format === 'geojson')
+  dataset.filePath = await downloadResource(context)
   return dataset
 }
 
@@ -24,7 +24,7 @@ export const getResource = async (context: GetResourceContext<ODSConfig>): Retur
  * - `title`: the dataset title
  * - `description`: the dataset description
  * - `keywords`: associated keywords
- * - `format`: the dataset format (`csv` or `geojson`)
+ * - `format`: the dataset format (`csv`)
  * - `topics`: Data Fair topics associated via a correspondence table
  * - `origin`: the original URL of the dataset on ODS
  * - `schema`: the structure of the dataset fields (`name`, `description`, `title`)
@@ -52,7 +52,7 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
     title: dataset.metas?.default?.title ?? '',
     description: dataset.metas?.default?.description ?? '',
     keywords: dataset.metas?.default?.keyword ?? [],
-    format: dataset.features?.some((feature) => feature === 'geo') ? 'geojson' : 'csv',
+    format: 'csv',
     origin: catalogConfig.url + '/explore/dataset/' + dataset.dataset_id,
     topics: correspondanceThemes(dataset.metas?.default?.theme, catalogConfig.themes),
     attachments: [],  // Will be filled later with getAttachments
@@ -66,11 +66,21 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
     }
   }
 
-  resource.schema = dataset.fields?.map((OdsField) => ({
-    key: OdsField.name,
-    description: OdsField.description ?? '',
-    title: OdsField.label
-  }))
+  const containsGeoShape = dataset.fields?.some((field) => field.type === 'geo_shape')
+  resource.schema = dataset.fields?.map((OdsField) => {
+    const geoFormat: { [key: string]: any } = {}
+    if (OdsField.type === 'geo_point_2d' && !containsGeoShape) {
+      geoFormat['x-refersTo'] = 'http://www.w3.org/2003/01/geo/wgs84_pos#lat_long'
+    } else if (OdsField.type === 'geo_shape') {
+      geoFormat['x-refersTo'] = 'https://purl.org/geojson/vocab#geometry'
+    }
+    return {
+      key: OdsField.name,
+      description: OdsField.description ?? '',
+      title: OdsField.label,
+      ...geoFormat
+    }
+  })
 
   // Ajouter meta donnees geographique
 
@@ -78,23 +88,24 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
 }
 
 /**
- * Downloads the rows of a dataset matching the given filters and saves them as a `.csv.gz` or `.geojson.gz` file in a temporary directory.
+ * Downloads the rows of a dataset matching the given filters and saves them as a `.csv.gz` file in a temporary directory.
  *
  * @param catalogConfig - The ODS configuration object.
  * @param resourceId - The ID of the dataset to download.
  * @param importConfig - The import configuration, including filters to apply.
  * @param tmpDir - The path to the temporary directory where the CSV will be saved.
  * @param log - The logger to record progress and errors.
- * @param isGeoJson - A boolean indicating if the dataset is in GeoJSON format. If true, the file will be saved as `.geojson.gz`, otherwise as `.csv.gz`.
  * @returns A promise resolving to the file path of the downloaded dataset.
  * @throws If there is an error writing the file or fetching the dataset.
  */
-const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDir, log }: GetResourceContext<ODSConfig>, isGeoJson: boolean): Promise<string> => {
+const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDir, log }: GetResourceContext<ODSConfig>): Promise<string> => {
   // Build the parameters for the ODS API request
   const odsParams: Record<string, string> = {
     select: '*'
   }
+  // remove empty contraints
   const constraints: ImportFilters = (importConfig.filters || []).filter((f: Filter) => f.field.name && f.vals && f.vals.length > 0)
+
   if (constraints?.length) {
     const where = constraints.map((cons: Filter) => {
       if (/^\d/.test(cons.field.name)) {
@@ -124,9 +135,8 @@ const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDi
     odsParams.where = where
   }
 
-  const format = isGeoJson ? 'geojson' : 'csv'
-  const url = `${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}/exports/${format}?compressed=true`
-  const destFile = path.join(tmpDir, `${resourceId}.${format}.gz`)
+  const url = `${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}/exports/csv?compressed=true`
+  const destFile = path.join(tmpDir, `${resourceId}.csv.gz`)
   const writer = fs.createWriteStream(destFile)
 
   // Send the request to ODS API to download the dataset
