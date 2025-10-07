@@ -55,7 +55,10 @@
         "listEditMode": "inline",
         "density": "compact",
         "getItems": {
-          "url": "${parent.data?.url}/api/explore/v2.1/catalog/facets?facet=theme",
+          "url": {
+            "expr": "parent.data.url ? `${parent.data.url}/api/explore/v2.1/catalog/facets?facet=theme` : undefined",
+            "type": "js-eval"
+          },
           "itemsResults": "data.facets[0]?.facets",
           "itemKey": "item.value"
         }
