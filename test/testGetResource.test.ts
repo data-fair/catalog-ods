@@ -6,7 +6,7 @@ import { it, describe, afterEach, beforeEach } from 'node:test'
 import { getResource } from '../lib/download.ts'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import os from 'node:os'
+import { tmpdir } from 'node:os'
 import { Readable } from 'stream'
 import nock from 'nock'
 
@@ -15,7 +15,7 @@ describe('test the getResource function with mock config', () => {
 
   // Crée un dossier temporaire avant chaque test
   beforeEach(async () => {
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'ods-test-'))
+    tmpDir = await fs.mkdtemp(path.join(tmpdir(), 'ods-test-'))
     nock.cleanAll() // Reset the mock before each test
   })
 
@@ -82,6 +82,7 @@ describe('test the getResource function with mock config', () => {
       resourceId,
       secrets: {},
       importConfig: { filters: [], attachments: [] },
+      update: { metadata: true, schema: true },
       tmpDir,
       log: logFunctions
     })
@@ -156,6 +157,7 @@ describe('test the getResource function with mock config', () => {
       resourceId,
       secrets: {},
       importConfig: { filters: [], attachments: [] },
+      update: { metadata: true, schema: true },
       tmpDir,
       log: logFunctions
     })
@@ -209,6 +211,7 @@ describe('test the getResource function with mock config', () => {
       resourceId,
       secrets: {},
       importConfig: { filters: [], attachments: [] },
+      update: { metadata: true, schema: true },
       tmpDir,
       log: logFunctions
     })
@@ -262,6 +265,7 @@ describe('test the getResource function with mock config', () => {
       resourceId,
       secrets: {},
       importConfig: { filters: [], attachments: [] },
+      update: { metadata: true, schema: true },
       tmpDir,
       log: logFunctions
     })
@@ -322,6 +326,7 @@ describe('test the getResource function with mock config', () => {
       resourceId,
       secrets: {},
       importConfig,
+      update: { metadata: true, schema: true },
       tmpDir,
       log: logFunctions
     })
@@ -403,6 +408,7 @@ describe('test the getResource function with mock config', () => {
       resourceId,
       secrets: {},
       importConfig,
+      update: { metadata: true, schema: true },
       tmpDir,
       log: logFunctions
     })
@@ -477,6 +483,7 @@ describe('test the getResource function with mock config', () => {
       resourceId: 'example-id',
       secrets: {},
       importConfig: { filters: [], attachments: [] },
+      update: { metadata: true, schema: true },
       tmpDir,
       log: logFunctions
     })
@@ -510,9 +517,58 @@ describe('test the getResource function with mock config', () => {
         resourceId: invalidResourceId,
         secrets: {},
         importConfig: { filters: [], attachments: [] },
+        update: { metadata: true, schema: true },
         tmpDir,
         log: logFunctions
       })
     }, /Erreur lors de la récuperation de la resource ODS/i)
+  })
+
+  it('should set analysis.escapeKeyAlgorithm to "compat-ods" when compatODS is true', async () => {
+    const catalogMockConfig: ODSConfig = {
+      url: 'https://example.com',
+      themes: []
+    }
+    const resourceId = 'compat-ods-example-id'
+    const mockMetaData: ODSDataset = {
+      dataset_id: resourceId,
+      metas: {
+        default: {
+          title: 'Compat ODS Example',
+          description: 'Dataset with compatODS enabled.',
+        }
+      },
+      features: ['analyse']
+    }
+
+    nock(catalogMockConfig.url)
+      .get(`/api/explore/v2.1/catalog/datasets/${resourceId}`)
+      .query({
+        select: 'exclude(attachments),exclude(alternative_exports)'
+      })
+      .reply(200, mockMetaData)
+
+    nock(catalogMockConfig.url)
+      .get(`/api/explore/v2.1/catalog/datasets/${resourceId}/exports/csv`)
+      .query({
+        select: '*',
+        compressed: true
+      })
+      .reply(200, () => new Readable({
+        read () { this.push('field1;field2\nvalue1;value2'); this.push(null) }
+      }))
+
+    const resource = await getResource({
+      catalogConfig: catalogMockConfig,
+      resourceId,
+      secrets: {},
+      importConfig: { filters: [], attachments: [], compatODS: true },
+      update: { metadata: true, schema: true },
+      tmpDir,
+      log: logFunctions
+    })
+
+    assert.ok(resource.analysis, 'Resource should have analysis property')
+    assert.strictEqual(resource.analysis.escapeKeyAlgorithm, 'compat-ods', 'escapeKeyAlgorithm should be "compat-ods"')
   })
 })

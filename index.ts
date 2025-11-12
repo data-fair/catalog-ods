@@ -10,7 +10,7 @@ const plugin: CatalogPlugin<ODSConfig, ODSCapabilities> = {
     return prepare(context)
   },
 
-  async listResources (context) {
+  async list (context) {
     const { listResources } = await import('./lib/imports.ts')
     return listResources(context)
   },

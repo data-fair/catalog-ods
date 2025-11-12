@@ -5,16 +5,34 @@ import path from 'path'
 import fs from 'fs'
 
 /**
- * Downloads the dataset and its attachments, retrieves its metadata and returns the dataset metadata with the downloaded file path included.
- * @param context The context containing the catalog configuration and resource identifier.
- * @returns A promise that resolves to the dataset metadata with the downloaded file path included.
+ * Builds a set of topics based on the themes from ODS and the corresponding Data Fair themes.
+ * @param odsThemes - The themes from the ODS dataset.
+ * @param mappingTable - The mapping table between ODS themes and Data Fair themes.
+ * @returns A set of Data Fair topics corresponding to the ODS themes. If no matching themes are found, an empty set is returned.
  */
-export const getResource = async (context: GetResourceContext<ODSConfig>): ReturnType<CatalogPlugin['getResource']> => {
-  await context.log.step('Téléchargement du fichier')
-  const dataset = await getMetaData(context)
-  dataset.attachments = await getAttachments(context)
-  dataset.filePath = await downloadResource(context)
-  return dataset
+const mapThemesToTopics = (odsThemes: string[] | undefined, mappingTable: ODSConfig['themes']
+): Resource['topics'] => {
+  if (!Array.isArray(odsThemes) || odsThemes.length === 0) {
+    return undefined
+  }
+  if (!Array.isArray(mappingTable) || mappingTable.length === 0) {
+    return undefined
+  }
+
+  const themesDF: Resource['topics'] = []
+
+  for (const odsTheme of odsThemes) {
+    const theme = mappingTable.find((themeTable) => themeTable.value === odsTheme)
+    if (theme) {
+      theme.dataFairThemes.forEach((dfTheme) => {
+        if (!themesDF.some(t => JSON.stringify(t) === JSON.stringify(dfTheme))) {
+          themesDF.push(dfTheme)
+        }
+      })
+    }
+  }
+
+  return themesDF.length > 0 ? themesDF : undefined
 }
 
 /**
@@ -38,7 +56,7 @@ export const getResource = async (context: GetResourceContext<ODSConfig>): Retur
  * @returns A promise resolved with the ODS dataset metadata
  * @throws If an error occurs while retrieving metadata.
  */
-const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContext<ODSConfig>): Promise<Resource> => {
+const getMetaData = async ({ catalogConfig, importConfig, resourceId, log }: GetResourceContext<ODSConfig>): Promise<Resource> => {
   let dataset: ODSDataset
   try {
     dataset = (await axios.get(`${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}?select=exclude(attachments),exclude(alternative_exports)`)).data
@@ -54,10 +72,12 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
     keywords: dataset.metas?.default?.keyword ?? [],
     format: 'csv',
     origin: catalogConfig.url + '/explore/dataset/' + dataset.dataset_id,
-    topics: correspondanceThemes(dataset.metas?.default?.theme, catalogConfig.themes),
+    topics: mapThemesToTopics(dataset.metas?.default?.theme, catalogConfig.themes),
     attachments: [],  // Will be filled later with getAttachments
     filePath: '',     // Will be filled later with downloadResource
   }
+
+  if (importConfig.compatODS) resource.analysis = { escapeKeyAlgorithm: 'compat-ods' }
 
   if (dataset.metas?.default?.license && dataset.metas?.default?.license_url) {
     resource.license = {
@@ -82,7 +102,7 @@ const getMetaData = async ({ catalogConfig, resourceId, log }: GetResourceContex
     }
   })
 
-  // Ajouter meta donnees geographique
+  // TODO: Add geographic metadata if available in ODS dataset
 
   return resource
 }
@@ -188,37 +208,6 @@ const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDi
 }
 
 /**
- * Builds a set of topics based on the themes from ODS and the corresponding Data Fair themes.
- * @param odsThemes - The themes from the ODS dataset.
- * @param tableCorrespondances - The mapping table between ODS themes and Data Fair themes.
- * @returns A set of Data Fair topics corresponding to the ODS themes. If no matching themes are found, an empty set is returned.
- */
-const correspondanceThemes = (odsThemes: string[] | undefined, tableCorrespondances: ODSConfig['themes']
-): Resource['topics'] => {
-  if (!Array.isArray(odsThemes) || odsThemes.length === 0) {
-    return undefined
-  }
-  if (!Array.isArray(tableCorrespondances) || tableCorrespondances.length === 0) {
-    return undefined
-  }
-
-  const themesDF: Resource['topics'] = []
-
-  for (const odsTheme of odsThemes) {
-    const theme = tableCorrespondances.find((themeTable) => themeTable.value === odsTheme)
-    if (theme) {
-      theme.dataFairThemes.forEach((dfTheme) => {
-        if (!themesDF.some(t => JSON.stringify(t) === JSON.stringify(dfTheme))) {
-          themesDF.push(dfTheme)
-        }
-      })
-    }
-  }
-
-  return themesDF.length > 0 ? themesDF : undefined
-}
-
-/**
  * Downloads the attachments of a dataset from ODS and saves them to a temporary directory.
  * @param importConfig - The import configuration containing the attachments to download.
  * @param log - The logger to record progress and errors.
@@ -261,4 +250,17 @@ const getAttachments = async ({ importConfig, log, tmpDir }: GetResourceContext<
   }
 
   return attachmentsDF
+}
+
+/**
+ * Downloads the dataset and its attachments, retrieves its metadata and returns the dataset metadata with the downloaded file path included.
+ * @param context The context containing the catalog configuration and resource identifier.
+ * @returns A promise that resolves to the dataset metadata with the downloaded file path included.
+ */
+export const getResource = async (context: GetResourceContext<ODSConfig>): ReturnType<CatalogPlugin['getResource']> => {
+  await context.log.step('Téléchargement du fichier')
+  const dataset = await getMetaData(context)
+  dataset.attachments = await getAttachments(context)
+  dataset.filePath = await downloadResource(context)
+  return dataset
 }

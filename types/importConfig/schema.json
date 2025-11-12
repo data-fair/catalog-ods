@@ -18,7 +18,7 @@
       "type": "array",
       "title": "Import filters",
       "x-i18n-title": {
-        "fr": "Filtres de l'import"
+        "fr": "Filtres d'import"
       },
       "description": "Select a column and one or more values. Only rows matching these criteria will be imported.",
       "x-i18n-description": {
@@ -128,7 +128,8 @@
           "itemsResults": "data.attachments",
           "itemTitle": "item.metas.title",
           "itemKey": "item.metas.id  ?? item.metas.title"
-        }
+        },
+        "cols": { "md": 6 }
       },
       "items": {
         "type": "object",
@@ -171,6 +172,18 @@
           }
         }
       }
+    },
+    "compatODS": {
+      "type": "boolean",
+      "title": "Enable key compatibility",
+      "x-i18n-title": {
+        "fr": "Activer la compatibilité des clés"
+      },
+      "description": "Uses the remote catalog's key normalization algorithm.",
+      "x-i18n-description": {
+        "fr": "Utilise l'algorithme de normalisation des clés du catalogue distant."
+      },
+      "layout": { "cols": { "md": 6 } }
     }
   }
 }

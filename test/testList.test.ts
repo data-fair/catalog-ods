@@ -3,7 +3,7 @@ import { strict as assert } from 'node:assert'
 import { it, describe, beforeEach, after } from 'node:test'
 import { listResources } from '../lib/imports.ts'
 import capabilities from '../lib/capabilities.ts'
-import type { ListResourcesContext } from '@data-fair/types-catalogs'
+import type { ListContext } from '@data-fair/types-catalogs'
 import nock from 'nock'
 
 describe('test the listResources function', () => {
@@ -11,7 +11,7 @@ describe('test the listResources function', () => {
     const catalogConfig: ODSConfig = {
       url: 'https://example.com'
     }
-    const config: ListResourcesContext<ODSConfig, typeof capabilities> = {
+    const config: ListContext<ODSConfig, typeof capabilities> = {
       catalogConfig,
       params: { size: 5, page: 1 },
       secrets: {}
@@ -130,7 +130,7 @@ describe('test the listResources function', () => {
     const catalogConfig: ODSConfig = {
       url: 'https://opendata.agenceore.fr'
     }
-    const config: ListResourcesContext<ODSConfig, typeof capabilities> = {
+    const config: ListContext<ODSConfig, typeof capabilities> = {
       catalogConfig,
       params: { size: 10, page: 1 },
       secrets: {}
