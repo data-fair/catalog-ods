@@ -81,6 +81,7 @@ describe('test the listResources function', () => {
       assert.deepEqual(catalog.results, [
         {
           id: 'dataset1',
+          slug: 'dataset1',
           title: 'Mock Dataset 1',
           description: '',
           format: 'csv',
@@ -89,6 +90,7 @@ describe('test the listResources function', () => {
         },
         {
           id: 'dataset2',
+          slug: 'dataset2',
           title: 'Mock Dataset 2',
           description: 'This is a mock dataset for testing purposes.',
           format: 'csv',
@@ -97,6 +99,7 @@ describe('test the listResources function', () => {
         },
         {
           id: 'dataset3',
+          slug: 'dataset3',
           title: 'Mock Dataset 3',
           description: 'This is a mock dataset for testing purposes.',
           format: 'csv',
@@ -128,7 +131,7 @@ describe('test the listResources function', () => {
 
   describe('test the listResources function with a true configuration', () => {
     const catalogConfig: ODSConfig = {
-      url: 'https://opendata.agenceore.fr'
+      url: 'https://data.rennesmetropole.fr'
     }
     const config: ListContext<ODSConfig, typeof capabilities> = {
       catalogConfig,
@@ -137,7 +140,7 @@ describe('test the listResources function', () => {
     }
 
     it('test listResources with a valid configuration', async () => {
-      // requete correspondante à : https://opendata.agenceore.fr/api/explore/v2.1/catalog/datasets
+      // Requête correspondante à : https://data.rennesmetropole.fr/api/explore/v2.1/catalog/datasets
       const catalog = await listResources(config)
       assert.ok(catalog.count === catalog.results.length || catalog.results.length === config.params.size, 'the count and the results length should match (or should reach the limit)')
       assert.ok(catalog.count > 0, 'it should have at least one result')

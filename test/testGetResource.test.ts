@@ -89,6 +89,7 @@ describe('test the getResource function with mock config', () => {
 
     const expectedResource: Resource = {
       id: 'example-id',
+      slug: 'example-id',
       title: 'example-title',
       filePath: tmpDir + '/' + resourceId + '.csv.gz',
       format: 'csv',
@@ -414,6 +415,7 @@ describe('test the getResource function with mock config', () => {
     })
     const expectedResource: Resource = {
       id: 'attachments-example-id',
+      slug: 'attachments-example-id',
       title: 'Attachments Example',
       filePath: path.join(tmpDir, `${resourceId}.csv.gz`),
       format: 'csv',
@@ -521,7 +523,7 @@ describe('test the getResource function with mock config', () => {
         tmpDir,
         log: logFunctions
       })
-    }, /Erreur lors de la récuperation de la resource ODS/i)
+    }, /Erreur lors de la récupération de la resource ODS/i)
   })
 
   it('should set analysis.escapeKeyAlgorithm to "compat-ods" when compatODS is true', async () => {
