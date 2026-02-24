@@ -129,7 +129,7 @@
           "itemTitle": "item.metas.title",
           "itemKey": "item.metas.id  ?? item.metas.title"
         },
-        "cols": { "md": 6 }
+        "cols": { "md": 8 }
       },
       "items": {
         "type": "object",
@@ -183,7 +183,7 @@
       "x-i18n-description": {
         "fr": "Utilise l'algorithme de normalisation des clés du catalogue distant."
       },
-      "layout": { "cols": { "md": 6 } }
+      "layout": { "cols": { "md": 4 } }
     }
   }
 }

@@ -17,6 +17,7 @@ const prepareCatalog = (catalogConfig: ODSConfig, odsCatalog: ODSDataset[]): Res
   for (const odsDataset of odsCatalog) {
     catalog.push({
       id: odsDataset.dataset_id,
+      slug: odsDataset.dataset_id,
       title: odsDataset.metas?.default?.title ?? '',
       description: odsDataset.metas?.default?.description ?? '',
       format: 'csv',
@@ -46,7 +47,7 @@ export const listResources = async (config: ListContext<ODSConfig, typeof capabi
     res = (await axios.get(`${config.catalogConfig.url}/api/explore/v2.1/catalog/datasets?select=exclude(attachments),exclude(alternative_exports),exclude(fields)`, { params: odsParams })).data
   } catch (e) {
     console.error(`Error fetching datasets from ODS ${e}`)
-    throw new Error('Erreur lors de la récuperation de la resource ODS')
+    throw new Error('Erreur lors de la récupération de la resource ODS')
   }
 
   const catalog = prepareCatalog(config.catalogConfig, res.results)

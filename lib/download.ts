@@ -62,11 +62,12 @@ const getMetaData = async ({ catalogConfig, importConfig, resourceId, log }: Get
     dataset = (await axios.get(`${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}?select=exclude(attachments),exclude(alternative_exports)`)).data
   } catch (e) {
     console.error(`Error fetching datasets from ODS ${e}`)
-    await log.error(`Erreur pendant la récuperation des données depuis ODS ${e instanceof Error ? e.message : String(e)}`)
-    throw new Error('Erreur lors de la récuperation de la resource ODS')
+    await log.error(`Erreur pendant la récupération des données depuis ODS ${e instanceof Error ? e.message : String(e)}`)
+    throw new Error('Erreur lors de la récupération de la resource ODS')
   }
   const resource: Resource = {
     id: dataset.dataset_id,
+    slug: dataset.dataset_id,
     title: dataset.metas?.default?.title ?? '',
     description: dataset.metas?.default?.description ?? '',
     keywords: dataset.metas?.default?.keyword ?? [],
