@@ -4,6 +4,72 @@ import type { CatalogPlugin, GetResourceContext, Resource } from '@data-fair/typ
 import path from 'path'
 import fs from 'fs'
 
+// Data-Fair / catalogs Resource accept only this enum for `frequency`.
+// ODS portals expose a mix of ISO 8601 durations, Dublin Core URIs, the enum itself and French
+// free-text. Normalize on lowercase and lookup.
+const DF_FREQUENCIES = new Set([
+  'triennial', 'biennial', 'annual', 'semiannual', 'threeTimesAYear', 'quarterly', 'bimonthly',
+  'monthly', 'semimonthly', 'biweekly', 'threeTimesAMonth', 'weekly', 'semiweekly', 'threeTimesAWeek',
+  'daily', 'continuous', 'irregular'
+])
+const FREQUENCY_MAP: Record<string, string> = {
+  p1d: 'daily',
+  p1w: 'weekly',
+  'p0.5m': 'semimonthly',
+  p2w: 'biweekly',
+  p1m: 'monthly',
+  p2m: 'bimonthly',
+  p3m: 'quarterly',
+  p6m: 'semiannual',
+  p1y: 'annual',
+  p2y: 'biennial',
+  p3y: 'triennial',
+  'http://purl.org/cld/freq/daily': 'daily',
+  'http://purl.org/cld/freq/weekly': 'weekly',
+  'http://purl.org/cld/freq/semimonthly': 'semimonthly',
+  'http://purl.org/cld/freq/monthly': 'monthly',
+  'http://purl.org/cld/freq/bimonthly': 'bimonthly',
+  'http://purl.org/cld/freq/quarterly': 'quarterly',
+  'http://purl.org/cld/freq/semiannual': 'semiannual',
+  'http://purl.org/cld/freq/annual': 'annual',
+  'http://purl.org/cld/freq/biennial': 'biennial',
+  'http://purl.org/cld/freq/triennial': 'triennial',
+  'http://purl.org/cld/freq/continuous': 'continuous',
+  'http://purl.org/cld/freq/irregular': 'irregular',
+  quotidienne: 'daily',
+  quotidien: 'daily',
+  journalière: 'daily',
+  journaliere: 'daily',
+  hebdomadaire: 'weekly',
+  bimensuelle: 'semimonthly',
+  mensuelle: 'monthly',
+  mensuel: 'monthly',
+  bimestriel: 'bimonthly',
+  bimestrielle: 'bimonthly',
+  trimestrielle: 'quarterly',
+  trimestriel: 'quarterly',
+  semestrielle: 'semiannual',
+  semestriel: 'semiannual',
+  annuelle: 'annual',
+  annuel: 'annual',
+  bisannuelle: 'biennial',
+  biennale: 'biennial',
+  triennale: 'triennial',
+  'temps réel': 'continuous',
+  'temps reel': 'continuous',
+  "tous les quarts d'heure": 'continuous',
+  ponctuelle: 'irregular',
+  ponctuel: 'irregular',
+  'production unique': 'irregular',
+  irrégulière: 'irregular',
+  irreguliere: 'irregular',
+}
+const mapFrequency = (raw: string | undefined): string | undefined => {
+  if (!raw) return undefined
+  if (DF_FREQUENCIES.has(raw)) return raw
+  return FREQUENCY_MAP[raw.toLowerCase().trim()]
+}
+
 /**
  * Builds a set of topics based on the themes from ODS and the corresponding Data Fair themes.
  * @param odsThemes - The themes from the ODS dataset.
@@ -86,6 +152,21 @@ const getMetaData = async ({ catalogConfig, importConfig, resourceId, log }: Get
       href: dataset.metas?.default?.license_url,
     }
   }
+
+  const dcat = (dataset.metas as any)?.dcat
+  const frequency = mapFrequency(dcat?.accrualperiodicity)
+  if (frequency) resource.frequency = frequency as Resource['frequency']
+
+  // ODS thumbnail endpoint — 404 if no thumbnail is configured for the dataset.
+  // For catalogs we keep the ODS-hosted URL since the resource explicitly references the source portal.
+  try {
+    const thumbUrl = `${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${dataset.dataset_id}/thumbnail`
+    const thumbRes = await axios.head(thumbUrl, { validateStatus: (s: number) => s < 500 })
+    const ct = thumbRes.headers?.['content-type']
+    if (thumbRes.status === 200 && typeof ct === 'string' && ct.startsWith('image/')) {
+      resource.image = thumbUrl
+    }
+  } catch { /* thumbnail not available, skip */ }
 
   const containsGeoShape = dataset.fields?.some((field) => field.type === 'geo_shape')
   resource.schema = dataset.fields?.map((OdsField) => {
