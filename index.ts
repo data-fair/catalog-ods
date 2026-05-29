@@ -1,7 +1,6 @@
-import type { CatalogPlugin } from '@data-fair/types-catalogs'
-import { configSchema, assertConfigValid, type ODSConfig } from '#types'
+import type CatalogPlugin from '@data-fair/types-catalogs'
+import { importConfigSchema, configSchema, assertConfigValid, type ODSConfig } from '#types'
 import { type ODSCapabilities, capabilities } from './lib/capabilities.ts'
-import { importConfigSchema } from '#types'
 // API Doc: https://data.economie.gouv.fr/api/explore/v2.1/console
 
 const plugin: CatalogPlugin<ODSConfig, ODSCapabilities> = {
@@ -19,8 +18,7 @@ const plugin: CatalogPlugin<ODSConfig, ODSCapabilities> = {
     return getResource(context)
   },
   metadata: {
-    title: 'Catalog ODS',
-    description: 'Importez des jeux de données depuis une solution Opendatasoft.',
+    title: 'ODS',
     capabilities
   },
   configSchema,
