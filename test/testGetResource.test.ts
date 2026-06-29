@@ -523,7 +523,7 @@ describe('test the getResource function with mock config', () => {
         tmpDir,
         log: logFunctions
       })
-    }, /Erreur lors de la récupération de la resource ODS/i)
+    }, /Error retrieving the ODS resource/i)
   })
 
   it('should set analysis.escapeKeyAlgorithm to "compat-ods" when compatODS is true', async () => {
