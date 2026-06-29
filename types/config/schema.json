@@ -38,9 +38,9 @@
     "url": {
       "type": "string",
       "title": "URL",
-      "description": "The URL of the API",
+      "description": "The URL of the site; the API used will be <your-url>/api/explore/v2.1",
       "x-i18n-description": {
-        "fr": "L'URL du site, l'API utilisée sera urlRenseignee/api/explore/v2.1"
+        "fr": "L'URL du site ; l'API utilisée sera <votre-url>/api/explore/v2.1"
       },
       "pattern": "^https?://.*[^/]$",
       "examples": [
@@ -83,7 +83,10 @@
           },
           "dataFairThemes": {
             "type": "array",
-            "title": "Thèmes Data Fair",
+            "title": "Data Fair themes",
+            "x-i18n-title": {
+              "fr": "Thèmes Data Fair"
+            },
             "default": [],
             "layout": {
               "props": {

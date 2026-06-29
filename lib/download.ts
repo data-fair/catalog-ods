@@ -128,8 +128,8 @@ const getMetaData = async ({ catalogConfig, importConfig, resourceId, log }: Get
     dataset = (await axios.get(`${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}?select=exclude(attachments),exclude(alternative_exports)`)).data
   } catch (e) {
     console.error(`Error fetching datasets from ODS ${e}`)
-    await log.error(`Erreur pendant la récupération des données depuis ODS ${e instanceof Error ? e.message : String(e)}`)
-    throw new Error('Erreur lors de la récupération de la resource ODS')
+    await log.error(`Error fetching data from ODS ${e instanceof Error ? e.message : String(e)}`)
+    throw new Error('Error retrieving the ODS resource')
   }
   const resource: Resource = {
     id: dataset.dataset_id,
@@ -211,7 +211,7 @@ const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDi
   if (constraints?.length) {
     const where = constraints.map((cons: Filter) => {
       if (/^\d/.test(cons.field.name)) {
-        throw new Error('Champ de filtrage invalide : il ne peut pas commencer par un chiffre (pour le champ ' + cons.field.name + ')')
+        throw new Error('Invalid filter field: it cannot start with a digit (for field ' + cons.field.name + ')')
       }
 
       const conditions = cons.vals.map(valeur => {
@@ -228,7 +228,7 @@ const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDi
           case 'boolean':
             return `${cons.field.name} is ${valeur.name}`
           default:
-            throw new Error(`Type de champ pour ${cons.field.name} non supporté dans les filtres`)
+            throw new Error(`Field type for ${cons.field.name} not supported in the filters`)
         }
       })
       return `(${conditions.join(' or ')})`
@@ -283,9 +283,9 @@ const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDi
 
     return result
   } catch (error) {
-    console.error('Erreur lors de la récupération du dataset ODS (stream)', error)
-    await log.error('Erreur lors de la récupération du dataset ODS (stream)', error instanceof Error ? error.message : String(error))
-    throw new Error('Erreur pendant le téléchargement du dataset ODS en streaming')
+    console.error('Error retrieving the ODS dataset (stream)', error)
+    await log.error('Error fetching the ODS dataset (stream)', error instanceof Error ? error.message : String(error))
+    throw new Error('Error while downloading the ODS dataset via streaming')
   }
 }
 
@@ -321,13 +321,13 @@ const getAttachments = async ({ importConfig, log, tmpDir }: GetResourceContext<
         filePath,
       })
       const stats = fs.statSync(filePath)
-      await log.info(`Pièce jointe ${attachment.metas.title} téléchargée. Taille : ${stats.size} octets`)
+      await log.info(`Attachment ${attachment.metas.title} downloaded. Size: ${stats.size} bytes`)
     } catch (error) {
       await log.error(
-        `Erreur lors du téléchargement de la pièce jointe ${attachment.metas.title}`,
+        `Error while downloading the attachment ${attachment.metas.title}`,
         error instanceof Error ? error.message : String(error)
       )
-      console.error(`Erreur lors du téléchargement de la pièce jointe ${attachment.metas.title}`, error)
+      console.error(`Error while downloading the attachment ${attachment.metas.title}`, error)
     }
   }
 
@@ -340,7 +340,7 @@ const getAttachments = async ({ importConfig, log, tmpDir }: GetResourceContext<
  * @returns A promise that resolves to the dataset metadata with the downloaded file path included.
  */
 export const getResource = async (context: GetResourceContext<ODSConfig>): ReturnType<CatalogPlugin['getResource']> => {
-  await context.log.step('Téléchargement du fichier')
+  await context.log.step('Downloading file')
   const dataset = await getMetaData(context)
   dataset.attachments = await getAttachments(context)
   dataset.filePath = await downloadResource(context)
