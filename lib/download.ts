@@ -64,6 +64,17 @@ const FREQUENCY_MAP: Record<string, string> = {
   irrégulière: 'irregular',
   irreguliere: 'irregular',
 }
+
+/**
+ * Joins a file name chosen by a user or by the remote portal into a directory,
+ * keeping only its basename so that it can never traverse out of the directory.
+ */
+export const safeFilePath = (dir: string, name: string): string => {
+  const fileName = path.basename(name)
+  if (!fileName || fileName === '.' || fileName === '..') throw new Error(`Invalid file name ${name}`)
+  return path.join(dir, fileName)
+}
+
 const mapFrequency = (raw: string | undefined): string | undefined => {
   if (!raw) return undefined
   if (DF_FREQUENCIES.has(raw)) return raw
@@ -238,7 +249,7 @@ const downloadResource = async ({ catalogConfig, resourceId, importConfig, tmpDi
   }
 
   const url = `${catalogConfig.url}/api/explore/v2.1/catalog/datasets/${resourceId}/exports/csv?compressed=true`
-  const destFile = path.join(tmpDir, `${resourceId}.csv.gz`)
+  const destFile = safeFilePath(tmpDir, `${resourceId}.csv.gz`)
   const writer = fs.createWriteStream(destFile)
 
   // Send the request to ODS API to download the dataset
@@ -303,9 +314,9 @@ const getAttachments = async ({ importConfig, log, tmpDir }: GetResourceContext<
 
   for (const attachment of attachmentODS) {
     const url = attachment.metas.url
-    const filePath = path.join(tmpDir, attachment.metas.title)
 
     try {
+      const filePath = safeFilePath(tmpDir, attachment.metas.title)
       const response = await axios.get(url, { responseType: 'stream' })
       const writer = fs.createWriteStream(filePath)
 
